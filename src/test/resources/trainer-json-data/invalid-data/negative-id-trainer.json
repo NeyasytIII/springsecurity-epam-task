@@ -1,0 +1,11 @@
+[
+  {
+    "userId": -1,
+    "firstName": "Error",
+    "lastName": "User",
+    "userName": "Error.User",
+    "password": "invalidPass",
+    "specialization": "None",
+    "active": false
+  }
+]

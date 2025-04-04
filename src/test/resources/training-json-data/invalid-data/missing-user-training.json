@@ -1,0 +1,11 @@
+[
+  {
+    "trainingId": 3,
+    "traineeId": 10,
+    "trainerId": 15,
+    "trainingName": "Nonexistent Training",
+    "type": "STRENGTH",
+    "trainingDate": "2025-04-01",
+    "trainingDuration": "60"
+  }
+]

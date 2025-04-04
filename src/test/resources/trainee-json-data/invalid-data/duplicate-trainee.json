@@ -1,0 +1,22 @@
+[
+  {
+    "userId": 1,
+    "firstName": "Alice",
+    "lastName": "Brown",
+    "userName": "Alice.Brown",
+    "password": "A1b2C3d4E5",
+    "address": "123 Elm Street",
+    "birthdayDate": "1995-04-21",
+    "active": true
+  },
+  {
+    "userId": 1,
+    "firstName": "Charlie",
+    "lastName": "Johnson",
+    "userName": "Charlie.J",
+    "password": "pass123",
+    "address": "789 Maple Road",
+    "birthdayDate": "2001-02-15",
+    "active": false
+  }
+]

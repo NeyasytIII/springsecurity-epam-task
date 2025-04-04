@@ -1,0 +1,20 @@
+[
+  {
+    "trainingId": 100,
+    "trainingName": "Morning Strength",
+    "type": "STRENGTH",
+    "trainerId": 1,
+    "traineeId": 1,
+    "trainingDate": "2025-03-11",
+    "trainingDuration": 60
+  },
+  {
+    "trainingId": 200,
+    "trainingName": "Yoga Relax",
+    "type": "YOGA",
+    "trainerId": 2,
+    "traineeId": 2,
+    "trainingDate": "2025-03-12",
+    "trainingDuration": 45
+  }
+]

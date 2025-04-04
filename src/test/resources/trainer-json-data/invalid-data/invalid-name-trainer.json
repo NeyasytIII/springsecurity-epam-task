@@ -1,0 +1,20 @@
+[
+  {
+    "userId": 5,
+    "firstName": "!!!",
+    "lastName": "Invalid",
+    "userName": "InvalidTrainer",
+    "password": "TrainerPass",
+    "specialization": "Boxing",
+    "active": true
+  },
+  {
+    "userId": 6,
+    "firstName": "",
+    "lastName": "",
+    "userName": "Empty.User",
+    "password": "EmptyPass",
+    "specialization": "Karate",
+    "active": false
+  }
+]

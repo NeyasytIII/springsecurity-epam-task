@@ -1,0 +1,20 @@
+[
+  {
+    "trainingId": 7,
+    "traineeId": 1,
+    "trainerId": 1,
+    "trainingName": "#####",
+    "type": "STRENGTH",
+    "trainingDate": "2025-05-01",
+    "trainingDuration": "60"
+  },
+  {
+    "trainingId": 8,
+    "traineeId": 2,
+    "trainerId": 2,
+    "trainingName": "",
+    "type": "YOGA",
+    "trainingDate": "2025-06-01",
+    "trainingDuration": "45"
+  }
+]

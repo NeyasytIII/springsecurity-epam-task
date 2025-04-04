@@ -1,0 +1,22 @@
+[
+  {
+    "userId": 3,
+    "firstName": "12345",
+    "lastName": "Invalid",
+    "userName": "123Invalid",
+    "password": "WrongPass1",
+    "address": "987 Error Street",
+    "birthdayDate": "2000-10-10",
+    "active": true
+  },
+  {
+    "userId": 4,
+    "firstName": "TooLongNameTooLongNameTooLongName",
+    "lastName": "Last",
+    "userName": "Long.Name",
+    "password": "LongPass1",
+    "address": "654 Overflow Ave",
+    "birthdayDate": "1999-12-31",
+    "active": false
+  }
+]
