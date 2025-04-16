@@ -76,5 +76,13 @@ public class DatabaseTrainingStorage implements TrainingStorage {
     }
 
 
-
+    @Override
+    @Transactional(readOnly = true)
+    @Loggable
+    public Optional<Training> findDuplicate(Long trainerId,
+                                            Long traineeId,
+                                            String trainingName,
+                                            Date trainingDate) {
+        return trainingRepository.findByFields(trainerId, traineeId, trainingName, trainingDate);
+    }
 }

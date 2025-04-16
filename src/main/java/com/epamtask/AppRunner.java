@@ -1,7 +1,11 @@
 package com.epamtask;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
 public class AppRunner {
     public static void main(String[] args) {
-        new GymCRMApp().start();
+        SpringApplication.run(AppRunner.class, args);
     }
 }

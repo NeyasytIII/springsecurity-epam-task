@@ -6,10 +6,13 @@ import com.epamtask.utils.UserNameGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 class GenericUserNameVerifierTest {
     private GenericUserNameVerifier<Trainee> verifierTrainee;
     private GenericUserNameVerifier<Trainer> verifierTrainer;

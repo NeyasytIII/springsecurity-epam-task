@@ -1,8 +1,15 @@
 package com.epamtask.service.impl;
 
 import com.epamtask.aspect.annotation.Loggable;
-import com.epamtask.model.*;
-import com.epamtask.service.*;
+import com.epamtask.model.Trainee;
+import com.epamtask.model.Trainer;
+import com.epamtask.model.Training;
+import com.epamtask.model.TrainingType;
+import com.epamtask.model.TrainingTypeEntity;
+import com.epamtask.service.TraineeService;
+import com.epamtask.service.TrainerService;
+import com.epamtask.service.TrainingService;
+import com.epamtask.service.TrainingTypeService;
 import com.epamtask.storege.datamodes.TrainingStorage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,40 +44,9 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     @Loggable
-    public void createTraining(Long trainingId, Long trainerId, Long traineeId, String trainingName,
+    public void createTraining(Long trainerId, Long traineeId, String trainingName,
                                TrainingType type, Date trainingDate, String trainingDuration) {
 
-        validateTrainingInput(trainingId, trainerId, traineeId, trainingName, type, trainingDate, trainingDuration);
-
-        if (trainingStorage.findById(trainingId).isPresent()) {
-            throw new IllegalArgumentException("Training with ID " + trainingId + " already exists");
-        }
-
-        Trainer trainer = trainerService.getTrainerById(trainerId)
-                .orElseThrow(() -> new IllegalArgumentException("Trainer not found"));
-        Trainee trainee = traineeService.getTraineeById(traineeId)
-                .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
-        TrainingTypeEntity trainingTypeEntity = trainingTypeService
-                .getTrainingTypeByName(type.name())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown training type: " + type));
-
-        Training training = new Training();
-        training.setTrainingId(trainingId);
-        training.setTrainer(trainer);
-        training.setTrainee(trainee);
-        training.setTrainingName(trainingName);
-        training.setTrainingDate(trainingDate);
-        training.setTrainingDuration(trainingDuration);
-        training.setTrainingType(trainingTypeEntity);
-
-        trainingStorage.save(training);
-    }
-
-    private void validateTrainingInput(Long trainingId, Long trainerId, Long traineeId, String trainingName,
-                                       TrainingType type, Date trainingDate, String trainingDuration) {
-
-        if (trainingId == null || trainingId <= 0)
-            throw new IllegalArgumentException("Training ID must be positive");
         if (trainerId == null || trainerId <= 0)
             throw new IllegalArgumentException("Trainer ID must be positive");
         if (traineeId == null || traineeId <= 0)
@@ -83,6 +59,28 @@ public class TrainingServiceImpl implements TrainingService {
             throw new IllegalArgumentException("Training date is required");
         if (trainingDuration == null || trainingDuration.isBlank())
             throw new IllegalArgumentException("Training duration is required");
+
+        if (trainingStorage.findDuplicate(trainerId, traineeId, trainingName, trainingDate).isPresent()) {
+            throw new IllegalArgumentException("Training already exists for these parameters");
+        }
+
+        Trainer trainer = trainerService.getTrainerById(trainerId)
+                .orElseThrow(() -> new IllegalArgumentException("Trainer not found"));
+        Trainee trainee = traineeService.getTraineeById(traineeId)
+                .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
+        TrainingTypeEntity trainingTypeEntity = trainingTypeService
+                .getTrainingTypeByName(type.name())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown training type: " + type));
+
+        Training training = new Training();
+        training.setTrainer(trainer);
+        training.setTrainee(trainee);
+        training.setTrainingName(trainingName);
+        training.setTrainingDate(trainingDate);
+        training.setTrainingDuration(trainingDuration);
+        training.setTrainingType(trainingTypeEntity);
+
+        trainingStorage.save(training);
     }
 
     @Override

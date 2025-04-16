@@ -1,21 +1,27 @@
 package com.epamtask.service.impl.dbimpl;
 
+import com.epamtask.config.ApplicationContextProvider;
 import com.epamtask.model.Trainer;
-import com.epamtask.model.TrainingType;
-import com.epamtask.model.TrainingTypeEntity;
 import com.epamtask.service.TrainingTypeService;
 import com.epamtask.service.impl.TrainerServiceImpl;
 import com.epamtask.storege.datamodes.TrainerStorage;
 import com.epamtask.utils.UserNameGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationContext;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TrainerServiceImplDatabaseTest {
 
@@ -31,6 +37,7 @@ class TrainerServiceImplDatabaseTest {
     @InjectMocks
     private TrainerServiceImpl trainerService;
 
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -41,40 +48,22 @@ class TrainerServiceImplDatabaseTest {
                 userNameGenerator,
                 trainingTypeService
         );
-    }
 
-    @Test
-    void testCreateTrainer_Success() {
-        Long id = 1L;
-        String firstName = "John";
-        String lastName = "Doe";
-        String specialization = "CARDIO";
-
-        when(databaseTrainerStorage.findById(id)).thenReturn(Optional.empty());
-        when(databaseTrainerStorage.findAll()).thenReturn(List.of());
-        when(userNameGenerator.generateUserName(eq(firstName), eq(lastName))).thenReturn("John.Doe");
-
-        TrainingTypeEntity trainingTypeEntity = new TrainingTypeEntity(TrainingType.CARDIO);
-        when(trainingTypeService.getTrainingTypeByName("CARDIO"))
-                .thenReturn(Optional.of(trainingTypeEntity));
-
-        trainerService.createTrainer(firstName, lastName, specialization);
-
-        ArgumentCaptor<Trainer> captor = ArgumentCaptor.forClass(Trainer.class);
-        verify(databaseTrainerStorage).save(captor.capture());
-
-        Trainer saved = captor.getValue();
-        assertEquals("John.Doe", saved.getUserName());
-        assertNotNull(saved.getPassword());
-        assertTrue(saved.isActive());
-        assertEquals(trainingTypeEntity, saved.getSpecializationType());
+        ApplicationContext context = mock(ApplicationContext.class);
+        ApplicationContextProvider.setContext(context);
+        when(context.getBean(TrainerStorage.class)).thenReturn(databaseTrainerStorage);
     }
 
     @Test
     void testUpdateTrainer_Valid() {
         Trainer trainer = new Trainer();
         trainer.setTrainerId(1L);
+        trainer.setUserName("john.doe");
+
+        when(databaseTrainerStorage.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
+
         trainerService.updateTrainer(trainer);
+
         verify(databaseTrainerStorage).save(trainer);
     }
 

@@ -1,5 +1,6 @@
 package com.epamtask.facade;
 
+import com.epamtask.dto.traineedto.TraineeProfileResponseDto;
 import com.epamtask.model.Trainee;
 
 import java.util.Date;
@@ -19,4 +20,5 @@ public interface TraineeFacade {
     void assignTrainersToTrainee(String traineeUsername, List<String> trainerUsernames);
     boolean verifyLogin(String username, String password);
     void setInitialPassword(String username, String newPassword);
+    TraineeProfileResponseDto getTraineeProfile(String username);
 }

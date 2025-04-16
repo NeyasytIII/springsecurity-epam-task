@@ -1,21 +1,25 @@
 package com.epamtask.config;
 
+import com.epamtask.aspect.annotation.Authenticated;
 import com.epamtask.model.Trainee;
 import com.epamtask.model.Trainer;
 import com.epamtask.model.Training;
-import com.epamtask.storege.loader.initializer.StorageInitializer;
 import com.epamtask.storege.loader.TraineeStorageLoader;
 import com.epamtask.storege.loader.TrainerStorageLoader;
 import com.epamtask.storege.loader.TrainingStorageLoader;
+import com.epamtask.storege.loader.initializer.StorageInitializer;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.Profile;
 
 import java.util.HashMap;
 import java.util.Map;
-
 @Configuration
+@Profile("test")
+@EnableAspectJAutoProxy
 public class TestConfig {
 
     @Bean
@@ -86,5 +90,17 @@ public class TestConfig {
                 trainerLoader,
                 trainingLoader
         );
+    }
+
+    @Bean
+    public DummyService testService() {
+        return new DummyService();
+    }
+
+    static class DummyService {
+        @Authenticated
+        public String securedMethod() {
+            return "Access granted";
+        }
     }
 }

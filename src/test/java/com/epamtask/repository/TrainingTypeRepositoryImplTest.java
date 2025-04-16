@@ -1,8 +1,6 @@
 package com.epamtask.repository;
 
-import com.epamtask.model.TrainingType;
 import com.epamtask.model.TrainingTypeEntity;
-import com.epamtask.repository.TrainingTypeRepository;
 import com.epamtask.repository.impl.TrainingTypeRepositoryImpl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -12,8 +10,15 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TrainingTypeRepositoryImplTest {
 

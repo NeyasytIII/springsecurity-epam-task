@@ -1,9 +1,9 @@
 package com.epamtask.storege.datamodes.impl.dbimpl;
 
-import com.epamtask.aspect.annotation.Loggable;
 import com.epamtask.model.Trainee;
 import com.epamtask.repository.TraineeRepository;
 import com.epamtask.storege.datamodes.TraineeStorage;
+import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-
+@Primary
 @Component("databaseTraineeStorage")
 public class DatabaseTraineeStorage implements TraineeStorage {
 

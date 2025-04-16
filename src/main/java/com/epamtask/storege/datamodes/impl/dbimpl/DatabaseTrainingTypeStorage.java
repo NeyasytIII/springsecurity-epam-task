@@ -1,7 +1,5 @@
 package com.epamtask.storege.datamodes.impl.dbimpl;
 
-import com.epamtask.aspect.annotation.Loggable;
-import com.epamtask.model.TrainingType;
 import com.epamtask.model.TrainingTypeEntity;
 import com.epamtask.repository.TrainingTypeRepository;
 import com.epamtask.storege.datamodes.TrainingTypeStorage;

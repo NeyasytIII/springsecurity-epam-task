@@ -4,9 +4,12 @@ import com.epamtask.model.Trainee;
 import com.epamtask.storege.loader.validation.common.DateValidator;
 import com.epamtask.storege.loader.validation.uservalidation.TraineeValidator;
 import org.junit.jupiter.api.Test;
+
 import java.util.Date;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class TraineeValidatorTest {
     private final DateValidator dateValidator = new DateValidator();

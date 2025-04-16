@@ -1,10 +1,15 @@
 package com.epamtask.facade.impl;
-import com.epamtask.facade.*;
+
+import com.epamtask.facade.CoordinatorFacade;
+import com.epamtask.facade.TraineeFacade;
+import com.epamtask.facade.TrainerFacade;
+import com.epamtask.facade.TrainingFacade;
+import com.epamtask.facade.TrainingTypeFacade;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 class CoordinatorFacadeImplTest {
 
     private TraineeFacade traineeFacade;

@@ -1,6 +1,8 @@
 package com.epamtask.facade;
 
 
+import com.epamtask.dto.trainerdto.TrainerProfileResponseDto;
+import com.epamtask.dto.trainerdto.TrainerShortDto;
 import com.epamtask.model.Trainer;
 
 import java.util.List;
@@ -20,5 +22,7 @@ public interface TrainerFacade {
     List<Trainer> getNotAssignedToTrainee(String traineeUsername);
     List<Trainer> getTrainersNotAssignedToTrainee(String traineeUsername);
     void setInitialPassword(String username, String newPassword);
+    TrainerProfileResponseDto getTrainerProfile(String username);
+    public List<TrainerShortDto> getFreeTrainersNotAssignedByTrainings(String traineeUsername);
 
 }

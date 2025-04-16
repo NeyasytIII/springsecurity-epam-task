@@ -23,5 +23,8 @@ public interface TrainingStorage {
     List<Training> findByTraineeUsernameAndCriteria(String traineeUsername, Date fromDate, Date toDate, String trainerName, String trainingType);
 
     List<Training> findByTrainerUsernameAndCriteria(String trainerUsername, Date fromDate, Date toDate, String traineeName);
-
+    Optional<Training> findDuplicate(Long trainerId,
+                                     Long traineeId,
+                                     String trainingName,
+                                     Date trainingDate);
 }

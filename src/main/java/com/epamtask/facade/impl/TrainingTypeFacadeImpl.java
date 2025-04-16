@@ -1,6 +1,7 @@
 package com.epamtask.facade.impl;
 
 import com.epamtask.aspect.annotation.Loggable;
+import com.epamtask.dto.trainingdto.TrainingTypeResponseDto;
 import com.epamtask.facade.TrainingTypeFacade;
 import com.epamtask.model.TrainingTypeEntity;
 import com.epamtask.service.TrainingTypeService;
@@ -22,8 +23,15 @@ public class TrainingTypeFacadeImpl implements TrainingTypeFacade {
 
     @Loggable
     @Override
-    public List<TrainingTypeEntity> getAllTrainingTypes() {
-        return trainingTypeService.getAllTrainingTypes();
+    public List<TrainingTypeResponseDto> getAllTrainingTypes() {
+        return trainingTypeService.getAllTrainingTypes().stream()
+                .map(entity -> {
+                    TrainingTypeResponseDto dto = new TrainingTypeResponseDto();
+                    dto.setId(entity.getId());
+                    dto.setType(entity.getType().name());
+                    return dto;
+                })
+                .toList();
     }
 
     @Loggable

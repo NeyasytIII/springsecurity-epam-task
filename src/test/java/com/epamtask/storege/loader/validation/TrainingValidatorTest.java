@@ -1,6 +1,9 @@
 package com.epamtask.storege.loader.validation;
-
-import com.epamtask.model.*;
+import com.epamtask.model.Trainer;
+import com.epamtask.model.Trainee;
+import com.epamtask.model.Training;
+import com.epamtask.model.TrainingTypeEntity;
+import com.epamtask.model.TrainingType;
 import com.epamtask.storege.loader.validation.common.DateValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class TrainingValidatorTest {
 

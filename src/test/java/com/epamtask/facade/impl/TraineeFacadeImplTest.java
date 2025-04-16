@@ -11,9 +11,12 @@ import org.mockito.MockitoAnnotations;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TraineeFacadeImplTest {
 
@@ -95,5 +98,10 @@ class TraineeFacadeImplTest {
     void assignTrainers_shouldDelegateToService() {
         traineeFacade.assignTrainersToTrainee("johndoe", List.of("trainer1", "trainer2"));
         verify(traineeService).assignTrainersToTrainee("johndoe", List.of("trainer1", "trainer2"));
+    }
+    @Test
+    void setInitialPassword_shouldDelegateToService() {
+        traineeFacade.setInitialPassword("johndoe", "initpass");
+        verify(traineeService).setInitialPassword("johndoe", "initpass");
     }
 }

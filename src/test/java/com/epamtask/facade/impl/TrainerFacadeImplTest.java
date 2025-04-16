@@ -1,5 +1,4 @@
 package com.epamtask.facade.impl;
-
 import com.epamtask.model.Trainer;
 import com.epamtask.service.TrainerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,8 +10,11 @@ import org.mockito.MockitoAnnotations;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TrainerFacadeImplTest {
 
@@ -86,5 +88,18 @@ class TrainerFacadeImplTest {
     void testDeactivateUser() {
         trainerFacade.deactivateUser("emily");
         verify(trainerService).deactivateUser("emily");
+    }
+    @Test
+    void testVerifyLogin() {
+        when(trainerService.verifyLogin("emily", "secret")).thenReturn(true);
+        boolean result = trainerFacade.verifyLogin("emily", "secret");
+        assertTrue(result);
+        verify(trainerService).verifyLogin("emily", "secret");
+    }
+
+    @Test
+    void testSetInitialPassword() {
+        trainerFacade.setInitialPassword("emily", "initPass");
+        verify(trainerService).setInitialPassword("emily", "initPass");
     }
 }

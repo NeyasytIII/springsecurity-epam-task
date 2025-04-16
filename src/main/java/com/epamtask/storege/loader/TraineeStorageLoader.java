@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Component
+//@Component
 public class TraineeStorageLoader {
 
     private final ResourceLoader resourceLoader;

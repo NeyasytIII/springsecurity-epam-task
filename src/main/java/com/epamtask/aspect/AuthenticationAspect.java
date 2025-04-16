@@ -1,37 +1,46 @@
 package com.epamtask.aspect;
 
 import com.epamtask.aspect.annotation.Authenticated;
-import com.epamtask.security.AuthContextHolder;
+import com.epamtask.security.AuthSessionStore;
+import com.epamtask.security.AuthTokenFilter;
 import com.epamtask.service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Aspect
 @Component
 public class AuthenticationAspect {
+
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationAspect.class);
     private final AuthenticationService authenticationService;
+    private final AuthSessionStore sessionStore;
 
-    public AuthenticationAspect(AuthenticationService authenticationService) {
+    public AuthenticationAspect(AuthenticationService authenticationService, AuthSessionStore sessionStore) {
         this.authenticationService = authenticationService;
+        this.sessionStore = sessionStore;
     }
 
     @Around("@annotation(authenticated)")
     public Object authenticate(ProceedingJoinPoint joinPoint, Authenticated authenticated) throws Throwable {
-        String username;
-        String password;
-        try {
-            username = AuthContextHolder.getUsername();
-            password = AuthContextHolder.getPassword();
-        } catch (Exception e) {
-            logger.error("Error retrieving credentials: {}", e.getMessage());
-            throw new SecurityException("Access denied: missing credentials.");
+        HttpServletRequest request = getCurrentHttpRequest();
+        String token = request.getHeader("X-Auth-Token");
+
+        if (token == null || token.isBlank()) {
+            logger.error("Missing X-Auth-Token header");
+            throw new SecurityException("Access denied: missing token.");
         }
 
+        AuthSessionStore.Credentials credentials = sessionStore.getCredentials(token);
+        String username = AuthTokenFilter.getUsername();
+        String password = AuthTokenFilter.getPassword();
 
         if (!authenticationService.authenticate(username, password)) {
             logger.error("AUTH: Authentication failed for user: {}", username);
@@ -42,8 +51,11 @@ public class AuthenticationAspect {
         return joinPoint.proceed();
     }
 
-
-    public boolean trySilentAuth(String username, String password) {
-        return authenticationService.authenticate(username, password);
+    private HttpServletRequest getCurrentHttpRequest() {
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (requestAttributes instanceof ServletRequestAttributes attrs) {
+            return attrs.getRequest();
+        }
+        throw new IllegalStateException("No current HTTP request");
     }
 }

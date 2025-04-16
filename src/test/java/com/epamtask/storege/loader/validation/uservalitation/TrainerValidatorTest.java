@@ -3,8 +3,11 @@ package com.epamtask.storege.loader.validation.uservalitation;
 import com.epamtask.model.Trainer;
 import com.epamtask.storege.loader.validation.uservalidation.TrainerValidator;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class TrainerValidatorTest {
     private final TrainerValidator trainerValidator = new TrainerValidator();

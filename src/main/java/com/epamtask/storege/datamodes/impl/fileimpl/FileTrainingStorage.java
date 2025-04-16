@@ -67,4 +67,9 @@ public class FileTrainingStorage implements TrainingStorage {
     public List<Training> findByTrainerUsernameAndCriteria(String trainerUsername, Date fromDate, Date toDate, String traineeName) {
         return trainingDAO.findByTrainerUsernameAndCriteria(trainerUsername, fromDate, toDate, traineeName);
     }
+
+    @Override
+    public Optional<Training> findDuplicate(Long trainerId, Long traineeId, String trainingName, Date trainingDate) {
+        return Optional.empty();
+    }
 }

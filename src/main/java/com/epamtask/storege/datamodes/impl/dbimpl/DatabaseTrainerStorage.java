@@ -4,13 +4,15 @@ import com.epamtask.aspect.annotation.Loggable;
 import com.epamtask.model.Trainer;
 import com.epamtask.repository.TrainerRepository;
 import com.epamtask.storege.datamodes.TrainerStorage;
+import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-
+@Primary
 @Component("databaseTrainerStorage")
+
 public class DatabaseTrainerStorage implements TrainerStorage {
 
     private final TrainerRepository trainerRepository;
@@ -46,9 +48,9 @@ public class DatabaseTrainerStorage implements TrainerStorage {
     public void verifySave(String username) {
         Optional<Trainer> saved = findByUsername(username);
         if (saved.isPresent()) {
-            System.out.println("✅ Trainer saved and confirmed from DB: " + saved.get());
+            System.out.println(" Trainer saved and confirmed from DB: " + saved.get());
         } else {
-            System.out.println("❌ Trainer NOT found in DB after save: " + username);
+            System.out.println(" Trainer NOT found in DB after save: " + username);
         }
     }
     @Override

@@ -4,7 +4,6 @@ VALUES
     ('Jane', 'Smith', 'Jane.Smith', 'pass456', true, 'YOGA', 2),
     ('Michael', 'Scott', 'Michael.Scott', 'michael123', true, 'STRENGTH', 1),
     ('Dwight', 'Schrute', 'Dwight.Schrute', 'dwight123', true, 'CROSSFIT', 3),
-    ('Pam', 'Beesly', 'Pam.Beesly', 'pam321', true, 'YOGA', 2),
     ('Jim', 'Halpert', 'Jim.Halpert', 'jim123', true, 'STRENGTH', 1),
     ('Ryan', 'Howard', 'Ryan.Howard', 'ryan123', true, 'CROSSFIT', 3),
     ('Kelly', 'Kapoor', 'Kelly.Kapoor', 'kelly123', true, 'ZUMBA', 4),

@@ -9,11 +9,11 @@ import com.epamtask.storege.loader.TraineeStorageLoader;
 import com.epamtask.storege.loader.TrainerStorageLoader;
 import com.epamtask.storege.loader.TrainingStorageLoader;
 import jakarta.annotation.PostConstruct;
-import org.springframework.stereotype.Component;
+
 
 import java.util.Map;
 
-@Component
+//@Component
 public class StorageInitializer {
 
     private final Map<Long, Trainee> traineeStorage;

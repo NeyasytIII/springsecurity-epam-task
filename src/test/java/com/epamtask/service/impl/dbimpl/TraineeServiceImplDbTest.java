@@ -1,5 +1,4 @@
 package com.epamtask.service.impl.dbimpl;
-
 import com.epamtask.model.Trainee;
 import com.epamtask.model.Trainer;
 import com.epamtask.service.impl.TraineeServiceImpl;
@@ -14,9 +13,13 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TraineeServiceImplDbTest {
 
@@ -59,6 +62,9 @@ class TraineeServiceImplDbTest {
     void updateTrainee_Success() {
         Trainee trainee = new Trainee();
         trainee.setTraineeId(1L);
+        trainee.setUserName("John.Doe");
+
+        when(traineeStorage.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
 
         traineeService.updateTrainee(trainee);
 
@@ -73,8 +79,9 @@ class TraineeServiceImplDbTest {
 
     @Test
     void deleteTraineeByUsername_Success() {
-        traineeService.deleteTraineeByUsername("john");
-        verify(traineeStorage).deleteByUsername("john");
+        when(traineeStorage.findByUsername("John")).thenReturn(Optional.of(new Trainee()));
+        traineeService.deleteTraineeByUsername("John");
+        verify(traineeStorage).deleteByUsername("John");
     }
 
     @Test

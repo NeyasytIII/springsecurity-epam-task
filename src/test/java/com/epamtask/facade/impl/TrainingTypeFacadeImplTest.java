@@ -1,5 +1,5 @@
 package com.epamtask.facade.impl;
-
+import com.epamtask.dto.trainingdto.TrainingTypeResponseDto;
 import com.epamtask.model.TrainingType;
 import com.epamtask.model.TrainingTypeEntity;
 import com.epamtask.service.TrainingTypeService;
@@ -12,8 +12,11 @@ import org.mockito.MockitoAnnotations;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 
 class TrainingTypeFacadeImplTest {
 
@@ -33,10 +36,10 @@ class TrainingTypeFacadeImplTest {
         List<TrainingTypeEntity> types = List.of(new TrainingTypeEntity(1L, TrainingType.CARDIO));
         when(trainingTypeService.getAllTrainingTypes()).thenReturn(types);
 
-        List<TrainingTypeEntity> result = trainingTypeFacade.getAllTrainingTypes();
+        List<TrainingTypeResponseDto> result = trainingTypeFacade.getAllTrainingTypes();
 
         assertEquals(1, result.size());
-        assertEquals("CARDIO", result.get(0).getType().name());
+        assertEquals("CARDIO", result.get(0).getType());
         verify(trainingTypeService).getAllTrainingTypes();
     }
 

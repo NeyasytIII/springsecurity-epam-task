@@ -7,7 +7,11 @@ import com.epamtask.model.Training;
 import com.epamtask.storege.loader.validation.common.DateValidator;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Component
 public class TrainingValidator {

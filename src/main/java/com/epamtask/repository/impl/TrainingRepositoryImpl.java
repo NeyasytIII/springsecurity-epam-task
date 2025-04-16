@@ -133,4 +133,26 @@ public class TrainingRepositoryImpl implements TrainingRepository {
 
         return typedQuery.getResultList();
     }
+    @Override
+    @Loggable
+    public Optional<Training> findByFields(Long trainerId,
+                                           Long traineeId,
+                                           String trainingName,
+                                           Date trainingDate) {
+        String jpql = """
+            SELECT t FROM Training t
+            WHERE t.trainer.trainerId = :trainerId
+              AND t.trainee.traineeId = :traineeId
+              AND t.trainingName = :trainingName
+              AND t.trainingDate = :trainingDate
+        """;
+        List<Training> results = entityManager.createQuery(jpql, Training.class)
+                .setParameter("trainerId", trainerId)
+                .setParameter("traineeId", traineeId)
+                .setParameter("trainingName", trainingName)
+                .setParameter("trainingDate", trainingDate)
+                .getResultList();
+
+        return results.stream().findFirst();
+    }
 }

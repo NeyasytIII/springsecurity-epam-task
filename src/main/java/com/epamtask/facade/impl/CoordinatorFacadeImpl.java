@@ -1,8 +1,11 @@
 package com.epamtask.facade.impl;
 
 import com.epamtask.aspect.annotation.Loggable;
-import com.epamtask.facade.*;
-import com.epamtask.security.AuthContextHolder;
+import com.epamtask.facade.CoordinatorFacade;
+import com.epamtask.facade.TraineeFacade;
+import com.epamtask.facade.TrainerFacade;
+import com.epamtask.facade.TrainingFacade;
+import com.epamtask.facade.TrainingTypeFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,4 +51,4 @@ public class CoordinatorFacadeImpl implements CoordinatorFacade {
         return trainingTypeFacade;
     }
 
-    }
+}

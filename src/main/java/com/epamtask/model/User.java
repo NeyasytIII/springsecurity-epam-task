@@ -1,8 +1,8 @@
 package com.epamtask.model;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class User {
 

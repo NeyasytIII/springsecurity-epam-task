@@ -1,15 +1,20 @@
 package com.epamtask.dao.impl;
 
-import com.epamtask.model.Training;
-import com.epamtask.model.Trainer;
 import com.epamtask.model.Trainee;
+import com.epamtask.model.Trainer;
+import com.epamtask.model.Training;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TrainingDAOImplTest {
 

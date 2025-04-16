@@ -4,6 +4,7 @@ import com.epamtask.model.Trainee;
 import com.epamtask.model.Trainer;
 import com.epamtask.model.Training;
 import com.epamtask.model.TrainingType;
+import com.epamtask.model.TrainingTypeEntity;
 import com.epamtask.service.TraineeService;
 import com.epamtask.service.TrainerService;
 import com.epamtask.service.TrainingTypeService;
@@ -12,10 +13,21 @@ import com.epamtask.storege.datamodes.TrainingStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TrainingServiceImplDatabaseTest {
 
@@ -48,22 +60,29 @@ class TrainingServiceImplDatabaseTest {
         when(databaseTrainingStorage.findById(trainingId)).thenReturn(Optional.empty());
         when(trainerService.getTrainerById(2L)).thenReturn(Optional.of(new Trainer()));
         when(traineeService.getTraineeById(3L)).thenReturn(Optional.of(new Trainee()));
-        when(trainingTypeService.getTrainingTypeByName("CARDIO")).thenReturn(Optional.of(new com.epamtask.model.TrainingTypeEntity()));
+        when(trainingTypeService.getTrainingTypeByName("CARDIO")).thenReturn(Optional.of(new TrainingTypeEntity(TrainingType.CARDIO)));
 
         trainingService.createTraining(
-                trainingId, 2L, 3L, "Yoga", TrainingType.CARDIO, new Date(), "1h"
+                2L, 3L, "Yoga", TrainingType.CARDIO, new Date(), "1h"
         );
 
         verify(databaseTrainingStorage).save(any(Training.class));
     }
 
     @Test
-    void testCreateTraining_DuplicateId_ShouldThrowException() {
-        when(databaseTrainingStorage.findById(1L)).thenReturn(Optional.of(new Training()));
+    void testCreateTraining_Duplicate_ShouldThrowException() {
+        when(databaseTrainingStorage.findDuplicate(anyLong(), anyLong(), anyString(), any())).thenReturn(Optional.of(new Training()));
 
         assertThrows(IllegalArgumentException.class, () ->
-                trainingService.createTraining(1L, 2L, 3L, "Yoga",
-                        TrainingType.CARDIO, new Date(), "1h"));
+                trainingService.createTraining(
+                        1L,
+                        2L,
+                        "Yoga",
+                        TrainingType.CARDIO,
+                        new Date(),
+                        "1h"
+                )
+        );
     }
 
     @Test

@@ -2,6 +2,8 @@ package com.epamtask.service.impl;
 
 import com.epamtask.aspect.annotation.Authenticated;
 import com.epamtask.aspect.annotation.Loggable;
+import com.epamtask.config.ApplicationContextProvider;
+import com.epamtask.exception.NotFoundException;
 import com.epamtask.model.Trainee;
 import com.epamtask.model.Trainer;
 import com.epamtask.service.TraineeService;
@@ -15,10 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class TraineeServiceImpl implements TraineeService {
@@ -46,7 +45,16 @@ public class TraineeServiceImpl implements TraineeService {
                 birthdayDate == null) {
             throw new IllegalArgumentException("Invalid input data");
         }
+
         String uniqueUsername = userNameGenerator.generateUserName(firstName, lastName);
+        if (traineeStorage.findByUsername(uniqueUsername).isPresent()) {
+            throw new IllegalArgumentException("Trainee with username already exists: " + uniqueUsername);
+        }
+        TrainerStorage trainerStorage = ApplicationContextProvider.getBean(TrainerStorage.class);
+        if (trainerStorage.findByUsername(uniqueUsername).isPresent()) {
+            throw new IllegalArgumentException("Username already taken by a trainer: " + uniqueUsername);
+        }
+
         String password = PasswordGenerator.generatePassword();
         Trainee trainee = new Trainee(null, firstName, lastName, address, birthdayDate, true);
         trainee.setUserName(uniqueUsername);
@@ -57,11 +65,21 @@ public class TraineeServiceImpl implements TraineeService {
     @Loggable
     @Authenticated
     @Override
-    public void updateTrainee(Trainee trainee) {
-        if (trainee == null || trainee.getTraineeId() == null) {
-            throw new IllegalArgumentException("Trainee and ID cannot be null");
+    public void updateTrainee(Trainee dto) {
+        if (dto == null || dto.getUserName() == null || dto.getUserName().isBlank()) {
+            throw new IllegalArgumentException("Username is required");
         }
-        traineeStorage.save(trainee);
+        Trainee existing = traineeStorage.findByUsername(dto.getUserName())
+                .orElseThrow(() -> new NotFoundException("Trainee not found: " + dto.getUserName()));
+        if (!dto.getUserName().equals(existing.getUserName())) {
+            existing.setUserName(dto.getUserName());
+        }
+        existing.setFirstName(dto.getFirstName());
+        existing.setLastName(dto.getLastName());
+        existing.setAddress(dto.getAddress());
+        existing.setBirthdayDate(dto.getBirthdayDate());
+        existing.setActive(dto.isActive());
+        traineeStorage.save(existing);
     }
 
     @Loggable
@@ -69,7 +87,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public void deleteTrainee(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("ID cannot be null");
+            throw new NotFoundException("ID cannot be null");
         }
         traineeStorage.deleteById(id);
     }
@@ -81,6 +99,9 @@ public class TraineeServiceImpl implements TraineeService {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username cannot be null or empty");
         }
+        if (traineeStorage.findByUsername(username).isEmpty()) {
+            throw new NotFoundException("Trainee not found: " + username);
+        }
         traineeStorage.deleteByUsername(username);
     }
 
@@ -91,14 +112,17 @@ public class TraineeServiceImpl implements TraineeService {
         return traineeStorage.findById(id);
     }
 
+    @Override
     @Loggable
     @Authenticated
-    @Override
     public Optional<Trainee> getTraineeByUsername(String username) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username cannot be null or empty");
         }
-        return traineeStorage.findByUsername(username);
+        return Optional.ofNullable(
+                traineeStorage.findByUsername(username)
+                        .orElseThrow(() -> new NotFoundException("Trainee not found: " + username))
+        );
     }
 
     @Loggable
@@ -107,7 +131,7 @@ public class TraineeServiceImpl implements TraineeService {
     public List<Trainee> getAllTrainees() {
         List<Trainee> result = traineeStorage.findAll();
         if (result == null || result.isEmpty()) {
-            throw new IllegalStateException("No trainees found");
+            throw new NotFoundException("No trainees found");
         }
         return result;
     }
@@ -124,7 +148,7 @@ public class TraineeServiceImpl implements TraineeService {
                     trainee.setPassword(newPassword);
                     traineeStorage.save(trainee);
                 },
-                () -> { throw new IllegalArgumentException("Trainee not found: " + username); }
+                () -> { throw new NotFoundException("Trainee not found: " + username); }
         );
     }
 
@@ -166,7 +190,7 @@ public class TraineeServiceImpl implements TraineeService {
             return;
         }
         Trainee trainee = traineeStorage.findByUsername(traineeUsername)
-                .orElseThrow(() -> new IllegalArgumentException("Trainee not found: " + traineeUsername));
+                .orElseThrow(() -> new NotFoundException("Trainee not found: " + traineeUsername));
         List<Trainer> trainers = trainerUsernames.stream()
                 .map(trainerStorage::findByUsername)
                 .flatMap(Optional::stream)
@@ -190,5 +214,4 @@ public class TraineeServiceImpl implements TraineeService {
     public void setInitialPassword(String username, String newPassword) {
         traineeStorage.updatePassword(username, newPassword);
     }
-
 }

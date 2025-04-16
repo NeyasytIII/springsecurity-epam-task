@@ -10,10 +10,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TrainingFacadeImplTest {
 
@@ -30,8 +37,8 @@ class TrainingFacadeImplTest {
 
     @Test
     void testCreateTraining() {
-        trainingFacade.createTraining(10L, 1L, 2L, "Yoga Relax", TrainingType.YOGA, new Date(), "45");
-        verify(trainingService).createTraining(eq(10L), eq(1L), eq(2L), eq("Yoga Relax"), eq(TrainingType.YOGA), any(), eq("45"));
+        trainingFacade.createTraining(1L, 2L, "Yoga Relax", TrainingType.YOGA, new Date(), "45");
+        verify(trainingService).createTraining(eq(1L), eq(2L), eq("Yoga Relax"), eq(TrainingType.YOGA), any(), eq("45"));
     }
 
     @Test
