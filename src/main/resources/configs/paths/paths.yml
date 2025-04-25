@@ -1,0 +1,5 @@
+storage:
+  file:
+    trainee: data/trainees.json
+    trainer: data/trainers.json
+    training: data/trainings.json

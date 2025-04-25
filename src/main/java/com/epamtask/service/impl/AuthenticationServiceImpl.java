@@ -5,6 +5,7 @@ import com.epamtask.service.AuthenticationService;
 import com.epamtask.storege.datamodes.TraineeStorage;
 import com.epamtask.storege.datamodes.TrainerStorage;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -16,22 +17,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final TrainerStorage trainerStorage;
 
     public AuthenticationServiceImpl(
-            @Qualifier("databaseTraineeStorage") TraineeStorage traineeStorage,
-            @Qualifier("databaseTrainerStorage") TrainerStorage trainerStorage) {
-        this.traineeStorage = traineeStorage;
-        this.trainerStorage = trainerStorage;
+            @Value("${data.source}") String dataSource,
+            @Qualifier("databaseTraineeStorage") TraineeStorage dbTrainee,
+            @Qualifier("fileTraineeStorage")     TraineeStorage fileTrainee,
+            @Qualifier("databaseTrainerStorage") TrainerStorage dbTrainer,
+            @Qualifier("fileTrainerStorage")     TrainerStorage fileTrainer
+    ) {
+        this.traineeStorage = "DATABASE".equalsIgnoreCase(dataSource) ? dbTrainee : fileTrainee;
+        this.trainerStorage = "DATABASE".equalsIgnoreCase(dataSource) ? dbTrainer : fileTrainer;
     }
 
     @Loggable
     @Override
     public boolean authenticate(String username, String password) {
-        boolean traineeValid = traineeStorage.findByUsername(username)
-                .map(trainee -> trainee.getPassword().equals(password))
-                .orElse(false);
+        var t = traineeStorage.findByUsername(username);
+        System.out.println("Trainee found? " + t.isPresent());
+        t.ifPresent(trainee -> System.out.println("Stored password: " + trainee.getPassword() + ", Given: " + password));
 
-        boolean trainerValid = trainerStorage.findByUsername(username)
-                .map(trainer -> trainer.getPassword().equals(password))
-                .orElse(false);
+        var r = trainerStorage.findByUsername(username);
+        System.out.println("Trainer found? " + r.isPresent());
+        r.ifPresent(trainer -> System.out.println("Stored password: " + trainer.getPassword() + ", Given: " + password));
+
+        boolean traineeValid = t.map(trainee -> trainee.getPassword().equals(password)).orElse(false);
+        boolean trainerValid = r.map(trainer -> trainer.getPassword().equals(password)).orElse(false);
 
         return traineeValid || trainerValid;
     }

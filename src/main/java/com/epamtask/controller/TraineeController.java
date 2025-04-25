@@ -1,6 +1,7 @@
 package com.epamtask.controller;
 
 import com.epamtask.aspect.annotation.Authenticated;
+import com.epamtask.aspect.annotation.MeasureApi;
 import com.epamtask.dto.traineedto.TraineeProfileResponseDto;
 import com.epamtask.dto.traineedto.TraineeTrainerUpdateDto;
 import com.epamtask.dto.traineedto.TraineeUpdateRequestDto;
@@ -16,6 +17,7 @@ import com.epamtask.mapper.TrainingMapper;
 import com.epamtask.model.Trainee;
 import com.epamtask.model.Trainer;
 import com.epamtask.model.Training;
+import com.epamtask.service.metrics.DatabaseMetricsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -25,23 +27,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import static com.epamtask.config.SwaggerExamplesConfig.TRAINEE_UPDATE_EXAMPLE;
 import static com.epamtask.config.SwaggerExamplesConfig.TRAINEE_TRAINERS_UPDATE;
+import static com.epamtask.config.SwaggerExamplesConfig.TRAINEE_UPDATE_EXAMPLE;
 
 @RestController
 @RequestMapping("/api/trainees")
@@ -54,6 +46,7 @@ public class TraineeController {
     private final TraineeMapper traineeMapper;
     private final TrainerMapper trainerMapper;
     private final TrainingMapper trainingMapper;
+    private final DatabaseMetricsService dbMetrics;
 
     public TraineeController(
             TraineeFacade traineeFacade,
@@ -61,7 +54,8 @@ public class TraineeController {
             TrainingFacade trainingFacade,
             TraineeMapper traineeMapper,
             TrainerMapper trainerMapper,
-            TrainingMapper trainingMapper
+            TrainingMapper trainingMapper,
+            DatabaseMetricsService dbMetrics
     ) {
         this.traineeFacade = traineeFacade;
         this.trainerFacade = trainerFacade;
@@ -69,19 +63,30 @@ public class TraineeController {
         this.traineeMapper = traineeMapper;
         this.trainerMapper = trainerMapper;
         this.trainingMapper = trainingMapper;
+        this.dbMetrics = dbMetrics;
     }
 
+    @MeasureApi(endpoint = "/api/trainees/{username}/profile", method = "GET")
     @GetMapping("/{username}/profile")
     @Authenticated
-    @Operation(summary = "Get trainee profile", responses = {
-            @ApiResponse(responseCode = "200", description = "Profile found",
-                    content = @Content(schema = @Schema(implementation = TraineeProfileResponseDto.class))),
-            @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
-    })
+    @Operation(
+            summary = "Get trainee profile",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Profile found",
+                            content = @Content(schema = @Schema(implementation = TraineeProfileResponseDto.class))),
+                    @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
+            }
+    )
     public ResponseEntity<TraineeProfileResponseDto> getProfile(@PathVariable String username) {
-        return ResponseEntity.ok(traineeFacade.getTraineeProfile(username));
+        try {
+            TraineeProfileResponseDto dto = dbMetrics.trackCallable("trainee", "select", () -> traineeFacade.getTraineeProfile(username));
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    @MeasureApi(endpoint = "/api/trainees/{username}", method = "PUT")
     @PutMapping("/{username}")
     @Authenticated
     @Operation(
@@ -90,7 +95,7 @@ public class TraineeController {
                     required = true,
                     content = @Content(
                             schema = @Schema(implementation = TraineeUpdateRequestDto.class),
-                            examples = {@ExampleObject(value = TRAINEE_UPDATE_EXAMPLE)}
+                            examples = @ExampleObject(value = TRAINEE_UPDATE_EXAMPLE)
                     )
             ),
             responses = {
@@ -101,27 +106,42 @@ public class TraineeController {
     )
     public ResponseEntity<TraineeProfileResponseDto> updateProfile(
             @PathVariable String username,
-            @RequestBody @Valid TraineeUpdateRequestDto dto) {
-
-        Trainee existing = traineeFacade.getTraineeByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Trainee not found: " + username));
-        Trainee updated = traineeMapper.toEntity(dto, existing);
-        updated.setUserName(username);
-        traineeFacade.updateTrainee(updated);
-        return ResponseEntity.ok(traineeMapper.toProfileDto(updated));
+            @RequestBody @Valid TraineeUpdateRequestDto dto
+    ) {
+        try {
+            return dbMetrics.trackCallable("trainee", "update", () -> {
+                Trainee existing = traineeFacade.getTraineeByUsername(username)
+                        .orElseThrow(() -> new IllegalArgumentException("Trainee not found: " + username));
+                Trainee updated = traineeMapper.toEntity(dto, existing);
+                updated.setUserName(username);
+                traineeFacade.updateTrainee(updated);
+                return ResponseEntity.ok(traineeMapper.toProfileDto(updated));
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    @MeasureApi(endpoint = "/api/trainees/{username}", method = "DELETE")
     @DeleteMapping("/{username}")
     @Authenticated
-    @Operation(summary = "Delete trainee profile", responses = {
-            @ApiResponse(responseCode = "200", description = "Trainee deleted"),
-            @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
-    })
+    @Operation(
+            summary = "Delete trainee profile",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Trainee deleted"),
+                    @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
+            }
+    )
     public ResponseEntity<Void> deleteTrainee(@PathVariable String username) {
-        traineeFacade.deleteTrainee(username);
-        return ResponseEntity.ok().build();
+        try {
+            dbMetrics.track("trainee", "delete", () -> traineeFacade.deleteTrainee(username));
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    @MeasureApi(endpoint = "/api/trainees/{username}/status", method = "PATCH")
     @PatchMapping("/{username}/status")
     @Authenticated
     @Operation(
@@ -133,17 +153,23 @@ public class TraineeController {
             }
     )
     public ResponseEntity<Void> toggleActivation(@PathVariable String username) {
-        Trainee trainee = traineeFacade.getTraineeByUsername(username)
-                .orElseThrow(() -> new NotFoundException("Trainee not found: " + username));
-
-        if (trainee.isActive()) {
-            traineeFacade.deactivateTrainee(username);
-        } else {
-            traineeFacade.activateTrainee(username);
+        try {
+            return dbMetrics.trackCallable("trainee", "update", () -> {
+                Trainee trainee = traineeFacade.getTraineeByUsername(username)
+                        .orElseThrow(() -> new NotFoundException("Trainee not found: " + username));
+                if (trainee.isActive()) {
+                    traineeFacade.deactivateTrainee(username);
+                } else {
+                    traineeFacade.activateTrainee(username);
+                }
+                return ResponseEntity.ok().build();
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return ResponseEntity.ok().build();
     }
 
+    @MeasureApi(endpoint = "/api/trainees/trainers", method = "PUT")
     @PutMapping("/trainers")
     @Authenticated
     @Operation(
@@ -152,7 +178,7 @@ public class TraineeController {
                     required = true,
                     content = @Content(
                             schema = @Schema(implementation = TraineeTrainerUpdateDto.class),
-                            examples = {@ExampleObject(value = TRAINEE_TRAINERS_UPDATE)}
+                            examples = @ExampleObject(value = TRAINEE_TRAINERS_UPDATE)
                     )
             ),
             responses = {
@@ -162,25 +188,42 @@ public class TraineeController {
             }
     )
     public ResponseEntity<List<TrainerShortDto>> updateTrainers(
-            @RequestBody @Valid TraineeTrainerUpdateDto dto) {
-        traineeFacade.assignTrainersToTrainee(dto.getTraineeUsername(), dto.getTrainerUsernames());
-        Trainee trainee = traineeFacade.getTraineeByUsername(dto.getTraineeUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
-        return ResponseEntity.ok(traineeMapper.toProfileDto(trainee).getTrainers());
+            @RequestBody @Valid TraineeTrainerUpdateDto dto
+    ) {
+        try {
+            return dbMetrics.trackCallable("trainee", "update", () -> {
+                traineeFacade.assignTrainersToTrainee(dto.getTraineeUsername(), dto.getTrainerUsernames());
+                Trainee trainee = traineeFacade.getTraineeByUsername(dto.getTraineeUsername())
+                        .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
+                return ResponseEntity.ok(traineeMapper.toProfileDto(trainee).getTrainers());
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    @MeasureApi(endpoint = "/api/trainees/{username}/free-trainers", method = "GET")
     @GetMapping("/{username}/free-trainers")
     @Authenticated
-    @Operation(summary = "Get free trainers not assigned via trainings", responses = {
-            @ApiResponse(responseCode = "200", description = "Trainers fetched",
-                    content = @Content(schema = @Schema(implementation = TrainerShortDto.class))),
-            @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
-    })
+    @Operation(
+            summary = "Get free trainers not assigned via trainings",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Trainers fetched",
+                            content = @Content(schema = @Schema(implementation = TrainerShortDto.class))),
+                    @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
+            }
+    )
     public ResponseEntity<List<TrainerShortDto>> getFreeTrainers(@PathVariable String username) {
-        List<TrainerShortDto> free = trainerFacade.getFreeTrainersNotAssignedByTrainings(username);
-        return ResponseEntity.ok(free);
+        try {
+            List<TrainerShortDto> free = dbMetrics.trackCallable("trainer", "select", () ->
+                    trainerFacade.getFreeTrainersNotAssignedByTrainings(username));
+            return ResponseEntity.ok(free);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    @MeasureApi(endpoint = "/api/trainees/{username}/trainings", method = "GET")
     @GetMapping("/{username}/trainings")
     @Authenticated
     @Operation(
@@ -194,21 +237,19 @@ public class TraineeController {
     public ResponseEntity<List<TrainingResponseDto>> getTraineeTrainings(
             @PathVariable String username,
             @RequestParam(required = false) @Schema(description = "Filter from this date (yyyy-MM-dd)")
-            @DateTimeFormat(pattern = "yyyy-MM-dd")
-            Date periodFrom,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") Date periodFrom,
             @RequestParam(required = false) @Schema(description = "Filter to this date (yyyy-MM-dd)")
-            @DateTimeFormat(pattern = "yyyy-MM-dd")
-            Date periodTo,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") Date periodTo,
             @RequestParam(required = false) @Schema(description = "Filter by trainer username") String trainerName,
             @RequestParam(required = false) @Schema(description = "Filter by training type") String trainingType
     ) {
-        List<Training> trainings = trainingFacade.getTrainingsByTraineeUsernameAndCriteria(
-                username,
-                periodFrom,
-                periodTo,
-                trainerName,
-                trainingType
-        );
-        return ResponseEntity.ok(trainingMapper.toDtoList(trainings));
+        try {
+            List<Training> trainings = dbMetrics.trackCallable("training", "select", () ->
+                    trainingFacade.getTrainingsByTraineeUsernameAndCriteria(
+                            username, periodFrom, periodTo, trainerName, trainingType));
+            return ResponseEntity.ok(trainingMapper.toDtoList(trainings));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

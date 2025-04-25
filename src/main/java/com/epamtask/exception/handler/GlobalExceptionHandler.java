@@ -5,6 +5,7 @@ import com.epamtask.dto.errordto.ValidationErrorDto;
 import com.epamtask.exception.EntityAlreadyExistsException;
 import com.epamtask.exception.InvalidCredentialsException;
 import com.epamtask.mapper.ErrorMapper;
+import com.epamtask.service.metrics.ValidationMetricsService;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,16 +26,21 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-    private final ErrorMapper errorMapper;
 
-    public GlobalExceptionHandler(ErrorMapper errorMapper) {
+    private final ErrorMapper errorMapper;
+    private final ValidationMetricsService validationMetrics;
+
+    public GlobalExceptionHandler(ErrorMapper errorMapper,
+                                  ValidationMetricsService validationMetrics) {
         this.errorMapper = errorMapper;
+        this.validationMetrics = validationMetrics;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ValidationErrorDto handleValidation(MethodArgumentNotValidException ex) {
         log.error("Validation failed", ex);
+        validationMetrics.error(ex.getBindingResult().getObjectName());
         return errorMapper.toValidationDto(ex.getBindingResult().getFieldErrors());
     }
 
@@ -41,6 +48,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ValidationErrorDto handleBind(BindException ex) {
         log.error("Bind exception", ex);
+        validationMetrics.error(ex.getBindingResult().getObjectName());
         return errorMapper.toValidationDto(ex.getFieldErrors());
     }
 
@@ -48,6 +56,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ValidationErrorDto handleConstraintViolation(ConstraintViolationException ex) {
         log.error("Constraint violation", ex);
+        validationMetrics.error("ConstraintViolation");
         ValidationErrorDto dto = new ValidationErrorDto();
         dto.setErrors(ex.getConstraintViolations().stream()
                 .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
@@ -99,6 +108,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(dto);
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponseDto> handleInvalidCredentials(InvalidCredentialsException ex) {
+        log.error("Invalid credentials", ex);
+        ErrorResponseDto dto = errorMapper.toErrorDto(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(dto);
+    }
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponseDto> handleResponseStatusException(ResponseStatusException ex) {
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(this.toErrorResponse(ex.getReason()));
+    }
+    public ErrorResponseDto toErrorResponse(String message) {
+        ErrorResponseDto dto = new ErrorResponseDto();
+        dto.setException("ResponseStatusException");
+        dto.setMessage(message);
+        dto.setTimestamp(LocalDateTime.now());
+        dto.setDetails(List.of("Unexpected error occurred"));
+        return dto;
+    }
+
     private ErrorResponseDto buildErrorResponse(String exception, String message, List<String> details) {
         ErrorResponseDto dto = new ErrorResponseDto();
         dto.setException(exception);
@@ -106,17 +136,5 @@ public class GlobalExceptionHandler {
         dto.setTimestamp(LocalDateTime.now());
         dto.setDetails(details);
         return dto;
-    }
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ErrorResponseDto> handleInvalidCredentials(InvalidCredentialsException ex) {
-        log.error("Invalid credentials", ex);
-        ErrorResponseDto dto = buildErrorResponse(
-                ex.getClass().getSimpleName(),
-                ex.getMessage(),
-                List.of("Authentication failed")
-        );
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(dto);
     }
 }

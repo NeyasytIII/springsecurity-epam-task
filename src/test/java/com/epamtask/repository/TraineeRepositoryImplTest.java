@@ -11,12 +11,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TraineeRepositoryImplTest {
 
@@ -24,7 +31,7 @@ class TraineeRepositoryImplTest {
     private EntityManager entityManager;
 
     @Mock
-    private TypedQuery<Trainee> typedQuery;
+    private TypedQuery<Trainee> traineeQuery;
 
     @Mock
     private TypedQuery<Trainer> trainerQuery;
@@ -33,75 +40,72 @@ class TraineeRepositoryImplTest {
     private TraineeRepositoryImpl traineeRepository;
 
     @BeforeEach
-    void setUp() {
+    void init() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testSave() {
-        Trainee trainee = new Trainee();
-        when(entityManager.merge(trainee)).thenReturn(trainee);
-        Trainee result = traineeRepository.save(trainee);
-        assertEquals(trainee, result);
+    void save() {
+        Trainee t = new Trainee();
+        when(entityManager.merge(t)).thenReturn(t);
+        Trainee saved = traineeRepository.save(t);
+        assertEquals(t, saved);
     }
 
     @Test
-    void testFindById() {
-        Trainee trainee = new Trainee();
-        when(entityManager.find(Trainee.class, 1L)).thenReturn(trainee);
-        Optional<Trainee> result = traineeRepository.findById(1L);
-        assertTrue(result.isPresent());
+    void findById() {
+        Trainee t = new Trainee();
+        when(entityManager.find(Trainee.class, 1L)).thenReturn(t);
+        Optional<Trainee> res = traineeRepository.findById(1L);
+        assertTrue(res.isPresent());
     }
 
     @Test
-    void testFindAll() {
-        when(entityManager.createQuery("SELECT t FROM Trainee t", Trainee.class)).thenReturn(typedQuery);
-        when(typedQuery.getResultList()).thenReturn(List.of(new Trainee()));
-        List<Trainee> result = traineeRepository.findAll();
-        assertEquals(1, result.size());
+    void findAll() {
+        when(entityManager.createQuery("SELECT t FROM Trainee t", Trainee.class)).thenReturn(traineeQuery);
+        when(traineeQuery.getResultList()).thenReturn(List.of(new Trainee()));
+        List<Trainee> list = traineeRepository.findAll();
+        assertEquals(1, list.size());
     }
 
     @Test
-    void testDelete() {
-        Trainee trainee = new Trainee();
-        when(entityManager.contains(trainee)).thenReturn(true);
-        traineeRepository.delete(trainee);
-        verify(entityManager).remove(trainee);
+    void delete() {
+        Trainee t = new Trainee();
+        when(entityManager.contains(t)).thenReturn(true);
+        traineeRepository.delete(t);
+        verify(entityManager).remove(t);
     }
 
     @Test
-    void testDeleteById() {
-        Trainee trainee = new Trainee();
-        when(entityManager.find(Trainee.class, 1L)).thenReturn(trainee);
+    void deleteById() {
+        Trainee t = new Trainee();
+        when(entityManager.find(Trainee.class, 1L)).thenReturn(t);
         traineeRepository.deleteById(1L);
-        verify(entityManager).remove(trainee);
+        verify(entityManager).remove(t);
     }
 
     @Test
-    void testFindByUsername() {
-        when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(typedQuery);
-        when(typedQuery.setParameter(eq("username"), anyString())).thenReturn(typedQuery);
-        when(typedQuery.getResultList()).thenReturn(List.of(new Trainee()));
-        Optional<Trainee> result = traineeRepository.findByUsername("john");
-        assertTrue(result.isPresent());
+    void findByUsername() {
+        when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
+        when(traineeQuery.setParameter(eq("username"), anyString())).thenReturn(traineeQuery);
+        when(traineeQuery.getResultStream()).thenReturn(Stream.of(new Trainee()));
+        Optional<Trainee> res = traineeRepository.findByUsername("john");
+        assertTrue(res.isPresent());
     }
 
     @Test
-    void testExistsByUsernameAndPassword() {
-        TypedQuery<Long> query = mock(TypedQuery.class);
-        when(entityManager.createQuery(anyString(), eq(Long.class))).thenReturn(query);
-        when(query.setParameter(eq("username"), eq("user"))).thenReturn(query);
-        when(query.setParameter(eq("password"), eq("pass"))).thenReturn(query);
-        when(query.getSingleResult()).thenReturn(1L);
-
-        boolean result = traineeRepository.existsByUsernameAndPassword("user", "pass");
-
-        assertTrue(result);
-        verify(query).getSingleResult();
+    void existsByUsernameAndPassword() {
+        TypedQuery<Long> q = mock(TypedQuery.class);
+        when(entityManager.createQuery(anyString(), eq(Long.class))).thenReturn(q);
+        when(q.setParameter(eq("username"), anyString())).thenReturn(q);
+        when(q.setParameter(eq("password"), anyString())).thenReturn(q);
+        when(q.getSingleResult()).thenReturn(1L);
+        boolean ok = traineeRepository.existsByUsernameAndPassword("u", "p");
+        assertTrue(ok);
     }
 
     @Test
-    void testUpdatePassword() {
+    void updatePassword() {
         var q = mock(TypedQuery.class);
         when(entityManager.createQuery(anyString())).thenReturn(q);
         when(q.setParameter(anyString(), any())).thenReturn(q);
@@ -110,18 +114,18 @@ class TraineeRepositoryImplTest {
     }
 
     @Test
-    void testUpdateTraineeTrainersList() {
+    void updateTraineeTrainersList() {
         Trainee trainee = new Trainee();
-        trainee.setTrainers(Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
-        when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(typedQuery);
-        when(typedQuery.setParameter(eq("username"), any())).thenReturn(typedQuery);
-        when(typedQuery.getResultList()).thenReturn(List.of(trainee));
+        trainee.setTrainers(new HashSet<>());
+        when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
+        when(traineeQuery.setParameter(eq("username"), any())).thenReturn(traineeQuery);
+        when(traineeQuery.getResultStream()).thenReturn(Stream.of(trainee));
 
         when(entityManager.createQuery(anyString(), eq(Trainer.class))).thenReturn(trainerQuery);
         when(trainerQuery.setParameter(eq("usernames"), any())).thenReturn(trainerQuery);
         when(trainerQuery.getResultList()).thenReturn(List.of(new Trainer()));
 
-        traineeRepository.updateTraineeTrainersList("john", List.of("trainer1"));
+        traineeRepository.updateTraineeTrainersList("john", List.of("tr1"));
         verify(entityManager).merge(trainee);
     }
 }

@@ -1,0 +1,43 @@
+management:
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: spring-task-epam
+    description: >
+      A Spring Boot RESTful CRM application developed as part of an EPAM practice course.
+      The project simulates a gym management system where trainees and trainers can:
+        - register and manage profiles
+        - log in and update personal data
+        - assign trainers to trainees
+        - track training sessions
+        - activate/deactivate accounts
+        - view weekly training statistics.
+      The application uses layered architecture, follows Spring best practices,
+      and provides Swagger documentation, validation, logging, and health monitoring via Actuator.
+    version: 1.0.0
+    authors:
+      - name: Yaroslav Pendo
+
+  project:
+    status: stable
+    type: backend-rest
+    goal: "Deliver a modular full-stack backend with clean layered structure and Spring best practices."
+
+  build:
+    time: 2025-04-21T00:00:00Z
+    jdk: 17
+    spring-boot: 3.1.5
+
+  environment:
+    profile: ${spring.profiles.active:default}
+    database: H2 (in-memory)
+    storage-mode: DATABASE
+    actuator-enabled: true
+
+  links:
+    swagger-ui: http://localhost:8080/swagger-ui/index.html
+    h2-console: http://localhost:8080/h2-console
+    health: http://localhost:8080/actuator/health

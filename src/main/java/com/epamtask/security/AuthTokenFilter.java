@@ -1,5 +1,6 @@
 package com.epamtask.security;
 
+import com.epamtask.aspect.annotation.Loggable;
 import com.epamtask.security.AuthSessionStore.Credentials;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,7 +22,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     public AuthTokenFilter(AuthSessionStore authSessionStore) {
         this.authSessionStore = authSessionStore;
     }
-
+    @Loggable
     public static String getUsername() {
         String username = currentUsername.get();
         if (username == null) {
@@ -29,7 +30,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
         return username;
     }
-
+    @Loggable
     public static String getPassword() {
         String password = currentPassword.get();
         if (password == null) {

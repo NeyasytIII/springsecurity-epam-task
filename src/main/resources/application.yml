@@ -1,0 +1,31 @@
+spring:
+  aop:
+    proxy-target-class: false
+  config:
+    import:
+      - classpath:configs/profiles/profiles.yml
+      - classpath:configs/paths/paths.yml
+      - classpath:configs/datasource/datasource.yml
+      - classpath:configs/logging/logging.yml
+      - classpath:configs/sql-init/sql-init.yml
+      - classpath:configs/monitoring/actuator.yml
+      - classpath:configs/hibernate/hibernate.yml
+      - classpath:configs/monitoring/info.yml
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  main:
+    allow-bean-definition-overriding: true
+
+server:
+  port: 8080
+
+data:
+  source: DATABASE

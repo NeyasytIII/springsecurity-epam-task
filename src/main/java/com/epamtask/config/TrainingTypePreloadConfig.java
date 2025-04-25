@@ -1,21 +1,20 @@
-package com.epamtask.storege.loader.initializer;
-
+package com.epamtask.config;
 
 import com.epamtask.service.impl.TrainingTypeInitServiceImpl;
 import jakarta.annotation.PostConstruct;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
-@Component
-public class TrainingTypeInitializer {
+@Configuration
+public class TrainingTypePreloadConfig {
 
     private final TrainingTypeInitServiceImpl trainingTypeInitService;
 
-    public TrainingTypeInitializer(TrainingTypeInitServiceImpl trainingTypeInitService) {
+    public TrainingTypePreloadConfig(TrainingTypeInitServiceImpl trainingTypeInitService) {
         this.trainingTypeInitService = trainingTypeInitService;
     }
 
     @PostConstruct
-    public void init() {
+    public void preloadTrainingTypes() {
         trainingTypeInitService.initTrainingTypes();
     }
 }

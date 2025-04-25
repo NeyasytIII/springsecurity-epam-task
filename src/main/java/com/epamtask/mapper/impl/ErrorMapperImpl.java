@@ -6,6 +6,7 @@ import com.epamtask.mapper.ErrorMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.FieldError;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,14 @@ public class ErrorMapperImpl implements ErrorMapper {
         dto.setMessage(message);
         dto.setException("RuntimeException");
         dto.setTimestamp(java.time.LocalDateTime.now());
+        return dto;
+    }
+    public ErrorResponseDto toErrorResponse(String message) {
+        ErrorResponseDto dto = new ErrorResponseDto();
+        dto.setException("ResponseStatusException");
+        dto.setMessage(message);
+        dto.setTimestamp(LocalDateTime.now());
+        dto.setDetails(List.of("Unexpected error occurred"));
         return dto;
     }
 }

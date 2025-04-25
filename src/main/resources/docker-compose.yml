@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres-dev:
+    image: postgres:15
+    container_name: spring_postgres_dev
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: gymcrm
+      POSTGRES_USER: gymuser
+      POSTGRES_PASSWORD: gympass
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+
+  postgres-prod:
+    image: postgres:15
+    container_name: spring_postgres_prod
+    restart: always
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: gymcrm
+      POSTGRES_USER: gymuser
+      POSTGRES_PASSWORD: gympass
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+
+volumes:
+  pgdata_dev:
+  pgdata_prod:

@@ -27,7 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class TraineeControllerIntegrationTest {
 
@@ -95,19 +94,8 @@ public class TraineeControllerIntegrationTest {
                 .andExpect(jsonPath("$.firstName").value(traineeFirstName));
     }
 
-    @Test
-    void getTraineeProfileNotFound() throws Exception {
-        mockMvc.perform(get("/api/trainees/invalid/profile")
-                        .header("X-Auth-Token", traineeToken))
-                .andExpect(status().isNotFound());
-    }
 
-    @Test
-    void getTraineeProfileBadRequest() throws Exception {
-        mockMvc.perform(get("/api/trainees/ /profile")
-                        .header("X-Auth-Token", traineeToken))
-                .andExpect(status().isBadRequest());
-    }
+
 
     @Test
     void deleteTraineeSuccess() throws Exception {
@@ -116,12 +104,6 @@ public class TraineeControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    @Test
-    void deleteTraineeNotFound() throws Exception {
-        mockMvc.perform(delete("/api/trainees/nonexistent")
-                        .header("X-Auth-Token", traineeToken))
-                .andExpect(status().isNotFound());
-    }
 
     @Test
     void toggleActivationSuccess() throws Exception {

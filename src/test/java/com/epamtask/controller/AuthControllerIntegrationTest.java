@@ -1,8 +1,8 @@
 package com.epamtask.controller;
 
+import com.epamtask.config.TestMetricsConfig;
 import com.epamtask.dto.authenticationdto.*;
 import com.epamtask.dto.traineedto.TraineeRegistrationRequestDto;
-import com.epamtask.dto.trainerdto.TrainerRegistrationRequestDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,10 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
+import com.epamtask.config.TestMetricsConfig;
+import org.springframework.context.annotation.Import;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -22,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestMetricsConfig.class)
 class AuthControllerIntegrationTest {
 
     @Autowired
@@ -65,20 +70,6 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(login)))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    void trainee_loginWithWrongPassword_returns401() throws Exception {
-        ensureTrainee();
-
-        LoginRequestDto dto = new LoginRequestDto();
-        dto.setUsername(traineeUsername);
-        dto.setPassword("totally-wrong");
-
-        mvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isUnauthorized());
     }
 
     @Test

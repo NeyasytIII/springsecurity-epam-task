@@ -60,8 +60,10 @@ public class AuthenticationFacadeImpl implements AuthenticationFacade {
         Trainee trainee = new Trainee();
         trainee.setUserName(username);
         trainee.setPassword(password);
+
         return authMapper.toAuthResponse(trainee);
     }
+
     @Loggable
     @Override
     public AuthResponseDto registerTrainer(TrainerRegistrationRequestDto dto) {
@@ -76,6 +78,7 @@ public class AuthenticationFacadeImpl implements AuthenticationFacade {
         trainer.setPassword(password);
         return authMapper.toAuthResponse(trainer);
     }
+
     @Loggable
     @Override
     public AuthTokenResponseDto login(LoginRequestDto dto) {

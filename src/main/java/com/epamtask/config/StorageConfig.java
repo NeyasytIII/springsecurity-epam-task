@@ -5,14 +5,15 @@ import com.epamtask.model.Trainer;
 import com.epamtask.model.Training;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@PropertySource({"classpath:application.properties", "classpath:path.properties"})
 @Configuration
+@Profile("!test")
 public class StorageConfig {
 
     private final Environment environment;

@@ -6,6 +6,7 @@ import com.epamtask.dto.trainingdto.TrainingCreateRequestDto;
 import com.epamtask.model.TrainingType;
 import com.epamtask.security.AuthSessionStore;
 import com.epamtask.service.AuthenticationService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,8 +46,6 @@ public class TrainingControllerIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         long timestamp = System.currentTimeMillis();
-        traineeUsername = "Cascade" + timestamp + ".Trainee";
-        trainerUsername = "Michael" + timestamp + ".Scott";
 
         TraineeRegistrationRequestDto traineeDto = new TraineeRegistrationRequestDto();
         traineeDto.setFirstName("Cascade" + timestamp);
@@ -54,27 +53,37 @@ public class TrainingControllerIntegrationTest {
         traineeDto.setAddress("Cascade St");
         traineeDto.setBirthdayDate(Date.valueOf("1999-12-31"));
 
-        mockMvc.perform(post("/api/auth/trainees/register")
+        String traineeResponse = mockMvc.perform(post("/api/auth/trainees/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(traineeDto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-        authenticationService.updatePasswordWithoutAuth(traineeUsername, "testpass");
-        assertTrue(authenticationService.authenticate(traineeUsername, "testpass"));
-        token = sessionStore.createToken(traineeUsername, "testpass");
+        JsonNode traineeJson = objectMapper.readTree(traineeResponse);
+        traineeUsername = traineeJson.get("username").asText();
+        String traineePassword = traineeJson.get("password").asText();
+
+        authenticationService.updatePasswordWithoutAuth(traineeUsername, traineePassword);
+        assertTrue(authenticationService.authenticate(traineeUsername, traineePassword));
+        token = sessionStore.createToken(traineeUsername, traineePassword);
 
         TrainerRegistrationRequestDto trainerDto = new TrainerRegistrationRequestDto();
         trainerDto.setFirstName("Michael" + timestamp);
         trainerDto.setLastName("Scott");
         trainerDto.setSpecialization("STRENGTH");
 
-        mockMvc.perform(post("/api/auth/trainers/register")
+        String trainerResponse = mockMvc.perform(post("/api/auth/trainers/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(trainerDto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-        authenticationService.updatePasswordWithoutAuth(trainerUsername, "trainerpass");
-        assertTrue(authenticationService.authenticate(trainerUsername, "trainerpass"));
+        JsonNode trainerJson = objectMapper.readTree(trainerResponse);
+        trainerUsername = trainerJson.get("username").asText();
+        String trainerPassword = trainerJson.get("password").asText();
+
+        authenticationService.updatePasswordWithoutAuth(trainerUsername, trainerPassword);
+        assertTrue(authenticationService.authenticate(trainerUsername, trainerPassword));
     }
 
     @Test
@@ -84,7 +93,7 @@ public class TrainingControllerIntegrationTest {
         dto.setTrainerUsername(trainerUsername);
         dto.setTrainingName("Spring Basics");
         dto.setTrainingDate(LocalDate.now());
-        dto.setTrainingDuration("1h");
+        dto.setTrainingDuration("60");
         dto.setTrainingType(TrainingType.STRENGTH);
 
         mockMvc.perform(post("/api/training")
