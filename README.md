@@ -15,4 +15,4 @@
   [http://localhost:8080/actuator/info](http://localhost:8080/actuator/info)
 
 - **Prometheus**
-   [http://localhost:8080/actuator/prometheus](http://localhost:8080/actuator/prometheus)
+[http://localhost:8080/actuator/prometheus](http://localhost:8080/actuator/prometheus)
