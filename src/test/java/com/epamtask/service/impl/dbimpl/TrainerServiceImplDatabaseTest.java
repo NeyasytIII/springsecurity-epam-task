@@ -100,32 +100,16 @@ class TrainerServiceImplDatabaseTest {
         verify(databaseTrainerStorage).deleteById(5L);
     }
 
-    @Test
-    void testUpdatePassword() {
-        Trainer trainer = new Trainer();
-        when(databaseTrainerStorage.findByUsername("jane.doe")).thenReturn(Optional.of(trainer));
-        trainerService.updatePassword("jane.doe", "newpass");
-        assertEquals("newpass", trainer.getPassword());
-        verify(databaseTrainerStorage).save(trainer);
-    }
 
     @Test
     void testActivateUser() {
-        Trainer trainer = new Trainer();
-        trainer.setActive(false);
-        when(databaseTrainerStorage.findByUsername("jane.doe")).thenReturn(Optional.of(trainer));
-        trainerService.activateUser("jane.doe");
-        assertTrue(trainer.isActive());
-        verify(databaseTrainerStorage).save(trainer);
+        trainerService.activateUser("John.Doe");
+        verify(databaseTrainerStorage).activateUser("John.Doe");
     }
 
     @Test
     void testDeactivateUser() {
-        Trainer trainer = new Trainer();
-        trainer.setActive(true);
-        when(databaseTrainerStorage.findByUsername("jane.doe")).thenReturn(Optional.of(trainer));
-        trainerService.deactivateUser("jane.doe");
-        assertFalse(trainer.isActive());
-        verify(databaseTrainerStorage).save(trainer);
+        trainerService.deactivateUser("John.Doe");
+        verify(databaseTrainerStorage).deactivateUser("John.Doe");
     }
 }

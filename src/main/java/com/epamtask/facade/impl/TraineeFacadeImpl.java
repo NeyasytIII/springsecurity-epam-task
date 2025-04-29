@@ -79,12 +79,6 @@ public class TraineeFacadeImpl implements TraineeFacade {
 
     @Loggable
     @Override
-    public void updatePassword(String username, String newPassword) {
-        traineeService.updatePassword(username, newPassword);
-    }
-
-    @Loggable
-    @Override
     public void activateTrainee(String username) {
         traineeService.activateUser(username);
     }
@@ -101,17 +95,6 @@ public class TraineeFacadeImpl implements TraineeFacade {
         traineeService.assignTrainersToTrainee(traineeUsername, trainerUsernames);
     }
 
-    @Loggable
-    @Override
-    public boolean verifyLogin(String username, String password) {
-        return traineeService.verifyLogin(username, password);
-    }
-
-    @Loggable
-    @Override
-    public void setInitialPassword(String username, String newPassword) {
-        traineeService.setInitialPassword(username, newPassword);
-    }
     @Loggable
     @Override
     public TraineeProfileResponseDto getTraineeProfile(String username) {

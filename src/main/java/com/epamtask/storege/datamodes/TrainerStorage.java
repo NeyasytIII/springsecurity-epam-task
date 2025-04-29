@@ -7,22 +7,11 @@ import java.util.Optional;
 
 public interface TrainerStorage {
     void save(Trainer trainer);
-
     Optional<Trainer> findById(Long id);
-
     Optional<Trainer> findByUsername(String username);
-
     List<Trainer> findAll();
-
     void deleteById(Long id);
-
-    void update(Trainer t);
-
-    boolean verifyLogin(String username, String password);
-
+    void activateUser(String username);
+    void deactivateUser(String username);
     List<Trainer> findNotAssignedToTrainee(String traineeUsername);
-    void updatePassword(String username, String newPassword);
-
-
-
 }

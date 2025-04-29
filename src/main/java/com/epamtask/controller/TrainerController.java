@@ -1,6 +1,5 @@
 package com.epamtask.controller;
 
-import com.epamtask.aspect.annotation.Authenticated;
 import com.epamtask.aspect.annotation.MeasureApi;
 import com.epamtask.dto.trainerdto.TrainerProfileResponseDto;
 import com.epamtask.dto.trainerdto.TrainerUpdateRequestDto;
@@ -54,7 +53,6 @@ public class TrainerController {
 
     @MeasureApi(endpoint = "/api/trainers/{username}/profile", method = "GET")
     @GetMapping("/{username}/profile")
-    @Authenticated
     @Operation(summary = "Get trainer profile",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Profile found",
@@ -72,7 +70,6 @@ public class TrainerController {
 
     @MeasureApi(endpoint = "/api/trainers/{username}", method = "PUT")
     @PutMapping("/{username}")
-    @Authenticated
     @Operation(summary = "Update trainer profile",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
@@ -106,7 +103,6 @@ public class TrainerController {
 
     @MeasureApi(endpoint = "/api/trainers/{username}/status", method = "PATCH")
     @PatchMapping("/{username}/status")
-    @Authenticated
     @Operation(summary = "Toggle trainer activation",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Status toggled"),
@@ -131,7 +127,6 @@ public class TrainerController {
 
     @MeasureApi(endpoint = "/api/trainers/{username}/trainings", method = "GET")
     @GetMapping("/{username}/trainings")
-    @Authenticated
     @Operation(summary = "Get trainer trainings list",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Trainings found",

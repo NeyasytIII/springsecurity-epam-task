@@ -1,11 +1,10 @@
 package com.epamtask.controller;
 
+import com.epamtask.dto.authenticationdto.LoginRequestDto;
 import com.epamtask.dto.traineedto.TraineeRegistrationRequestDto;
 import com.epamtask.dto.trainerdto.TrainerRegistrationRequestDto;
 import com.epamtask.dto.trainingdto.TrainingCreateRequestDto;
 import com.epamtask.model.TrainingType;
-import com.epamtask.security.AuthSessionStore;
-import com.epamtask.service.AuthenticationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.sql.Date;
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,12 +32,6 @@ public class TrainingControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private AuthSessionStore sessionStore;
-
-    @Autowired
-    private AuthenticationService authenticationService;
-
     private String token;
     private String traineeUsername;
     private String trainerUsername;
@@ -50,7 +43,7 @@ public class TrainingControllerIntegrationTest {
         TraineeRegistrationRequestDto traineeDto = new TraineeRegistrationRequestDto();
         traineeDto.setFirstName("Cascade" + timestamp);
         traineeDto.setLastName("Trainee");
-        traineeDto.setAddress("Cascade St");
+        traineeDto.setAddress("Main St");
         traineeDto.setBirthdayDate(Date.valueOf("1999-12-31"));
 
         String traineeResponse = mockMvc.perform(post("/api/auth/trainees/register")
@@ -63,9 +56,17 @@ public class TrainingControllerIntegrationTest {
         traineeUsername = traineeJson.get("username").asText();
         String traineePassword = traineeJson.get("password").asText();
 
-        authenticationService.updatePasswordWithoutAuth(traineeUsername, traineePassword);
-        assertTrue(authenticationService.authenticate(traineeUsername, traineePassword));
-        token = sessionStore.createToken(traineeUsername, traineePassword);
+        LoginRequestDto login = new LoginRequestDto();
+        login.setUsername(traineeUsername);
+        login.setPassword(traineePassword);
+
+        String loginResp = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(login)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        token = "Bearer " + objectMapper.readTree(loginResp).get("token").asText();
 
         TrainerRegistrationRequestDto trainerDto = new TrainerRegistrationRequestDto();
         trainerDto.setFirstName("Michael" + timestamp);
@@ -78,12 +79,7 @@ public class TrainingControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        JsonNode trainerJson = objectMapper.readTree(trainerResponse);
-        trainerUsername = trainerJson.get("username").asText();
-        String trainerPassword = trainerJson.get("password").asText();
-
-        authenticationService.updatePasswordWithoutAuth(trainerUsername, trainerPassword);
-        assertTrue(authenticationService.authenticate(trainerUsername, trainerPassword));
+        trainerUsername = objectMapper.readTree(trainerResponse).get("username").asText();
     }
 
     @Test
@@ -97,7 +93,7 @@ public class TrainingControllerIntegrationTest {
         dto.setTrainingType(TrainingType.STRENGTH);
 
         mockMvc.perform(post("/api/training")
-                        .header("X-Auth-Token", token)
+                        .header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk());

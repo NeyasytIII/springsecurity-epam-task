@@ -69,11 +69,7 @@ class DatabaseTraineeStorageTest {
         verify(traineeRepository).deleteByUsername("user");
     }
 
-    @Test
-    void testUpdatePassword() {
-        storage.updatePassword("user", "newpass");
-        verify(traineeRepository).updatePassword("user", "newpass");
-    }
+
 
     @Test
     void testActivateUser() {

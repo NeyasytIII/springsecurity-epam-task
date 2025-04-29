@@ -1,38 +1,31 @@
 package com.epamtask.health;
 
-import com.epamtask.aspect.annotation.Loggable;
-import com.epamtask.security.AuthSessionStore;
-import com.epamtask.security.AuthSessionStore.Credentials;
+import com.epamtask.service.AuthenticationService;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-
 @Component
-@Profile({"dev", "prod"})
 public class AuthenticationHealthIndicator implements HealthIndicator {
 
-    private final AuthSessionStore authSessionStore;
+    private final AuthenticationService authenticationService;
 
-    public AuthenticationHealthIndicator(AuthSessionStore authSessionStore) {
-        this.authSessionStore = authSessionStore;
+    public AuthenticationHealthIndicator(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
     }
 
     @Override
-    @Loggable
     public Health health() {
         try {
-            String token = authSessionStore.createToken("testUser", "testPassword");
-            Credentials credentials = authSessionStore.getCredentials(token);
+            boolean isAuthenticated = authenticationService.authenticate("testUser", "testPassword");
 
-            if (credentials != null) {
+            if (isAuthenticated) {
                 return Health.up().withDetail("authentication", "Auth system is working properly").build();
+            } else {
+                return Health.down().withDetail("authentication", "Authentication failed").build();
             }
-        } catch (SecurityException e) {
-            return Health.down().withDetail("authentication", "Authentication failed").build();
+        } catch (Exception e) {
+            return Health.down().withDetail("authentication", "Authentication system is down: " + e.getMessage()).build();
         }
-
-        return Health.down().withDetail("authentication", "Token is invalid").build();
     }
 }

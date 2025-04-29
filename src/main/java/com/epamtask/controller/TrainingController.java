@@ -1,6 +1,5 @@
 package com.epamtask.controller;
 
-import com.epamtask.aspect.annotation.Authenticated;
 import com.epamtask.aspect.annotation.MeasureApi;
 import com.epamtask.dto.trainingdto.TrainingCreateRequestDto;
 import com.epamtask.facade.TrainingFacade;
@@ -37,7 +36,6 @@ public class TrainingController {
 
     @MeasureApi(endpoint = "/api/training", method = "POST")
     @PostMapping
-    @Authenticated
     @Operation(
             summary = "Add new training",
             description = "Requires prior call to /api/auth/login to authenticate user.",

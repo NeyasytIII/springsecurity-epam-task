@@ -1,29 +1,22 @@
 package com.epamtask.controller;
 
+import com.epamtask.dto.authenticationdto.LoginRequestDto;
 import com.epamtask.dto.trainerdto.TrainerUpdateRequestDto;
-import com.epamtask.dto.trainingdto.TrainingFilterRequestDto;
-import com.epamtask.security.AuthSessionStore;
-import com.epamtask.service.AuthenticationService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -35,30 +28,34 @@ public class TrainerControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private AuthSessionStore sessionStore;
-
-    @Autowired
-    private AuthenticationService authenticationService;
-
     private String token;
 
-    private final String username = "Michael.Scott";
-    private final String password = "trainerpass";
+    private final String username = "John.Doe";
+    private final String password = "pass123";
 
     @BeforeEach
-    void setUp() {
-        authenticationService.updatePasswordWithoutAuth(username, password);
-        token = sessionStore.createToken(username, password);
+    void setUp() throws Exception {
+        LoginRequestDto login = new LoginRequestDto();
+        login.setUsername(username);
+        login.setPassword(password);
+
+        String response = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(login)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        JsonNode json = objectMapper.readTree(response);
+        token = json.get("token").asText();
     }
 
     @Test
     void getTrainerProfile_shouldReturn200() throws Exception {
         mockMvc.perform(get("/api/trainers/" + username + "/profile")
-                        .header("X-Auth-Token", token))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("Michael"))
-                .andExpect(jsonPath("$.lastName").value("Scott"))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
                 .andExpect(jsonPath("$.specialization").value("STRENGTH"))
                 .andExpect(jsonPath("$.active").value(true));
     }
@@ -71,7 +68,7 @@ public class TrainerControllerIntegrationTest {
         dto.setIsActive(true);
 
         mockMvc.perform(put("/api/trainers/" + username)
-                        .header("X-Auth-Token", token)
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -81,14 +78,14 @@ public class TrainerControllerIntegrationTest {
     @Test
     void toggleActivation_shouldReturn200() throws Exception {
         mockMvc.perform(patch("/api/trainers/" + username + "/status")
-                        .header("X-Auth-Token", token))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getTrainerTrainings_shouldReturn200() throws Exception {
         mockMvc.perform(get("/api/trainers/" + username + "/trainings")
-                        .header("X-Auth-Token", token))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -99,7 +96,7 @@ public class TrainerControllerIntegrationTest {
         String periodTo = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 
         mockMvc.perform(get("/api/trainers/" + username + "/trainings")
-                        .header("X-Auth-Token", token)
+                        .header("Authorization", "Bearer " + token)
                         .param("periodFrom", periodFrom)
                         .param("periodTo", periodTo))
                 .andExpect(status().isOk())

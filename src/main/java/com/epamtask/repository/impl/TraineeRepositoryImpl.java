@@ -45,9 +45,7 @@ public class TraineeRepositoryImpl implements TraineeRepository {
     @MeasureDb(table = "trainee", operation = "delete")
     @Override
     public void delete(Trainee entity) {
-        entityManager.remove(entityManager.contains(entity)
-                ? entity
-                : entityManager.merge(entity));
+        entityManager.remove(entityManager.contains(entity) ? entity : entityManager.merge(entity));
     }
 
     @Loggable
@@ -69,30 +67,6 @@ public class TraineeRepositoryImpl implements TraineeRepository {
                 Trainee.class);
         q.setParameter("username", username);
         return q.getResultStream().findFirst();
-    }
-
-    @Loggable
-    @MeasureDb(table = "trainee", operation = "select")
-    @Override
-    public boolean existsByUsernameAndPassword(String username, String password) {
-        Long cnt = entityManager.createQuery(
-                        "SELECT COUNT(t) FROM Trainee t WHERE t.userName = :username AND t.password = :password",
-                        Long.class)
-                .setParameter("username", username)
-                .setParameter("password", password)
-                .getSingleResult();
-        return cnt > 0;
-    }
-
-    @Loggable
-    @MeasureDb(table = "trainee", operation = "update")
-    @Override
-    public void updatePassword(String username, String newPassword) {
-        entityManager.createQuery(
-                        "UPDATE Trainee t SET t.password = :newPassword WHERE t.userName = :username")
-                .setParameter("newPassword", newPassword)
-                .setParameter("username", username)
-                .executeUpdate();
     }
 
     @Loggable
@@ -146,5 +120,4 @@ public class TraineeRepositoryImpl implements TraineeRepository {
         );
         entityManager.merge(trainee);
     }
-
 }

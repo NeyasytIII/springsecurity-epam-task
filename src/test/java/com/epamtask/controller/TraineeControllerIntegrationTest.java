@@ -11,19 +11,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -89,27 +83,23 @@ public class TraineeControllerIntegrationTest {
     @Test
     void getTraineeProfileSuccess() throws Exception {
         mockMvc.perform(get("/api/trainees/" + traineeUsername + "/profile")
-                        .header("X-Auth-Token", traineeToken))
+                        .header("Authorization", "Bearer " + traineeToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value(traineeFirstName));
     }
 
-
-
-
     @Test
     void deleteTraineeSuccess() throws Exception {
         mockMvc.perform(delete("/api/trainees/" + traineeUsername)
-                        .header("X-Auth-Token", traineeToken))
+                        .header("Authorization", "Bearer " + traineeToken))
                 .andExpect(status().isOk());
     }
-
 
     @Test
     void toggleActivationSuccess() throws Exception {
         mockMvc.perform(patch("/api/trainees/" + traineeUsername + "/status")
                         .param("isActive", "false")
-                        .header("X-Auth-Token", traineeToken))
+                        .header("Authorization", "Bearer " + traineeToken))
                 .andExpect(status().isOk());
     }
 
@@ -120,7 +110,7 @@ public class TraineeControllerIntegrationTest {
         dto.setTrainerUsernames(List.of(trainerUsername));
 
         mockMvc.perform(put("/api/trainees/trainers")
-                        .header("X-Auth-Token", traineeToken)
+                        .header("Authorization", "Bearer " + traineeToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -130,14 +120,14 @@ public class TraineeControllerIntegrationTest {
     @Test
     void getNotAssignedTrainersSuccess() throws Exception {
         mockMvc.perform(get("/api/trainees/" + traineeUsername + "/free-trainers")
-                        .header("X-Auth-Token", traineeToken))
+                        .header("Authorization", "Bearer " + traineeToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getTraineeTrainingsSuccess() throws Exception {
         mockMvc.perform(get("/api/trainees/" + traineeUsername + "/trainings")
-                        .header("X-Auth-Token", traineeToken))
+                        .header("Authorization", "Bearer " + traineeToken))
                 .andExpect(status().isOk());
     }
 }

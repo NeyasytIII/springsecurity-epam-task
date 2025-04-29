@@ -1,6 +1,5 @@
 package com.epamtask.controller;
 
-import com.epamtask.aspect.annotation.Authenticated;
 import com.epamtask.aspect.annotation.MeasureApi;
 import com.epamtask.dto.traineedto.TraineeProfileResponseDto;
 import com.epamtask.dto.traineedto.TraineeTrainerUpdateDto;
@@ -15,7 +14,6 @@ import com.epamtask.mapper.TraineeMapper;
 import com.epamtask.mapper.TrainerMapper;
 import com.epamtask.mapper.TrainingMapper;
 import com.epamtask.model.Trainee;
-import com.epamtask.model.Trainer;
 import com.epamtask.model.Training;
 import com.epamtask.service.metrics.DatabaseMetricsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,7 +66,6 @@ public class TraineeController {
 
     @MeasureApi(endpoint = "/api/trainees/{username}/profile", method = "GET")
     @GetMapping("/{username}/profile")
-    @Authenticated
     @Operation(
             summary = "Get trainee profile",
             responses = {
@@ -88,7 +85,6 @@ public class TraineeController {
 
     @MeasureApi(endpoint = "/api/trainees/{username}", method = "PUT")
     @PutMapping("/{username}")
-    @Authenticated
     @Operation(
             summary = "Update trainee profile",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -124,7 +120,6 @@ public class TraineeController {
 
     @MeasureApi(endpoint = "/api/trainees/{username}", method = "DELETE")
     @DeleteMapping("/{username}")
-    @Authenticated
     @Operation(
             summary = "Delete trainee profile",
             responses = {
@@ -143,7 +138,6 @@ public class TraineeController {
 
     @MeasureApi(endpoint = "/api/trainees/{username}/status", method = "PATCH")
     @PatchMapping("/{username}/status")
-    @Authenticated
     @Operation(
             summary = "Toggle trainee activation",
             description = "Switches the trainee's active status to the opposite",
@@ -171,7 +165,6 @@ public class TraineeController {
 
     @MeasureApi(endpoint = "/api/trainees/trainers", method = "PUT")
     @PutMapping("/trainers")
-    @Authenticated
     @Operation(
             summary = "Assign trainers to trainee",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -204,7 +197,6 @@ public class TraineeController {
 
     @MeasureApi(endpoint = "/api/trainees/{username}/free-trainers", method = "GET")
     @GetMapping("/{username}/free-trainers")
-    @Authenticated
     @Operation(
             summary = "Get free trainers not assigned via trainings",
             responses = {
@@ -225,7 +217,6 @@ public class TraineeController {
 
     @MeasureApi(endpoint = "/api/trainees/{username}/trainings", method = "GET")
     @GetMapping("/{username}/trainings")
-    @Authenticated
     @Operation(
             summary = "Get trainee trainings by filters",
             responses = {

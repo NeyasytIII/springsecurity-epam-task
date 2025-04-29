@@ -16,14 +16,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 class TraineeRepositoryImplTest {
 
@@ -87,45 +82,60 @@ class TraineeRepositoryImplTest {
     @Test
     void findByUsername() {
         when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
-        when(traineeQuery.setParameter(eq("username"), anyString())).thenReturn(traineeQuery);
+        when(traineeQuery.setParameter("username", "john")).thenReturn(traineeQuery);
         when(traineeQuery.getResultStream()).thenReturn(Stream.of(new Trainee()));
-        Optional<Trainee> res = traineeRepository.findByUsername("john");
-        assertTrue(res.isPresent());
+        Optional<Trainee> result = traineeRepository.findByUsername("john");
+        assertTrue(result.isPresent());
     }
 
     @Test
-    void existsByUsernameAndPassword() {
-        TypedQuery<Long> q = mock(TypedQuery.class);
-        when(entityManager.createQuery(anyString(), eq(Long.class))).thenReturn(q);
-        when(q.setParameter(eq("username"), anyString())).thenReturn(q);
-        when(q.setParameter(eq("password"), anyString())).thenReturn(q);
-        when(q.getSingleResult()).thenReturn(1L);
-        boolean ok = traineeRepository.existsByUsernameAndPassword("u", "p");
-        assertTrue(ok);
-    }
-
-    @Test
-    void updatePassword() {
+    void activateUser() {
         var q = mock(TypedQuery.class);
         when(entityManager.createQuery(anyString())).thenReturn(q);
         when(q.setParameter(anyString(), any())).thenReturn(q);
-        traineeRepository.updatePassword("u", "p");
+        traineeRepository.activateUser("user1");
         verify(q).executeUpdate();
+    }
+
+    @Test
+    void deactivateUser() {
+        var q = mock(TypedQuery.class);
+        when(entityManager.createQuery(anyString())).thenReturn(q);
+        when(q.setParameter(anyString(), any())).thenReturn(q);
+        traineeRepository.deactivateUser("user1");
+        verify(q).executeUpdate();
+    }
+
+    @Test
+    void deleteByUsername() {
+        var q = mock(TypedQuery.class);
+        when(entityManager.createQuery(anyString())).thenReturn(q);
+        when(q.setParameter(anyString(), any())).thenReturn(q);
+        traineeRepository.deleteByUsername("user1");
+        verify(q).executeUpdate();
+    }
+
+    @Test
+    void update() {
+        Trainee t = new Trainee();
+        traineeRepository.update(t);
+        verify(entityManager).merge(t);
     }
 
     @Test
     void updateTraineeTrainersList() {
         Trainee trainee = new Trainee();
         trainee.setTrainers(new HashSet<>());
-        when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
-        when(traineeQuery.setParameter(eq("username"), any())).thenReturn(traineeQuery);
+        when(entityManager.createQuery(contains("Trainee t"), eq(Trainee.class))).thenReturn(traineeQuery);
+        when(traineeQuery.setParameter("username", "john")).thenReturn(traineeQuery);
         when(traineeQuery.getResultStream()).thenReturn(Stream.of(trainee));
 
-        when(entityManager.createQuery(anyString(), eq(Trainer.class))).thenReturn(trainerQuery);
+        when(entityManager.createQuery(contains("Trainer t"), eq(Trainer.class))).thenReturn(trainerQuery);
         when(trainerQuery.setParameter(eq("usernames"), any())).thenReturn(trainerQuery);
         when(trainerQuery.getResultList()).thenReturn(List.of(new Trainer()));
 
         traineeRepository.updateTraineeTrainersList("john", List.of("tr1"));
+
         verify(entityManager).merge(trainee);
     }
 }

@@ -12,7 +12,7 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI gymCrmOpenAPI() {
-        final String securitySchemeName = "X-Auth-Token";
+        final String securitySchemeName = "Authorization";
 
         return new OpenAPI()
                 .info(new Info()
@@ -24,9 +24,9 @@ public class OpenApiConfig {
                         .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()
                                         .name(securitySchemeName)
-                                        .type(SecurityScheme.Type.APIKEY)
-                                        .in(SecurityScheme.In.HEADER)
-                                        .name("X-Auth-Token")
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
                         )
                 );
     }

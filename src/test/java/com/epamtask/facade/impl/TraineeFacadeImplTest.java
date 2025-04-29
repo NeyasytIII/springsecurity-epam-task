@@ -1,5 +1,8 @@
 package com.epamtask.facade.impl;
 
+import com.epamtask.facade.TrainingFacade;
+import com.epamtask.mapper.TraineeMapper;
+import com.epamtask.mapper.TrainerMapper;
 import com.epamtask.model.Trainee;
 import com.epamtask.service.TraineeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +14,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,6 +26,15 @@ class TraineeFacadeImplTest {
 
     @Mock
     private TraineeService traineeService;
+
+    @Mock
+    private TrainingFacade trainingFacade;
+
+    @Mock
+    private TraineeMapper traineeMapper;
+
+    @Mock
+    private TrainerMapper trainerMapper;
 
     @InjectMocks
     private TraineeFacadeImpl traineeFacade;
@@ -77,12 +90,6 @@ class TraineeFacadeImplTest {
     }
 
     @Test
-    void updatePassword_shouldDelegateToService() {
-        traineeFacade.updatePassword("johndoe", "newpass");
-        verify(traineeService).updatePassword("johndoe", "newpass");
-    }
-
-    @Test
     void activateTrainee_shouldDelegateToService() {
         traineeFacade.activateTrainee("johndoe");
         verify(traineeService).activateUser("johndoe");
@@ -98,10 +105,5 @@ class TraineeFacadeImplTest {
     void assignTrainers_shouldDelegateToService() {
         traineeFacade.assignTrainersToTrainee("johndoe", List.of("trainer1", "trainer2"));
         verify(traineeService).assignTrainersToTrainee("johndoe", List.of("trainer1", "trainer2"));
-    }
-    @Test
-    void setInitialPassword_shouldDelegateToService() {
-        traineeFacade.setInitialPassword("johndoe", "initpass");
-        verify(traineeService).setInitialPassword("johndoe", "initpass");
     }
 }

@@ -14,10 +14,7 @@ public interface TraineeService {
   Optional<Trainee> getTraineeById(Long id);
   Optional<Trainee> getTraineeByUsername(String username);
   List<Trainee> getAllTrainees();
-  void updatePassword(String username, String newPassword);
   void activateUser(String username);
   void deactivateUser(String username);
   void assignTrainersToTrainee(String traineeUsername, List<String> trainerUsernames);
-  boolean verifyLogin(String username, String password);
-  void setInitialPassword(String username, String newPassword);
 }

@@ -74,12 +74,6 @@ class FileTraineeStorageTest {
     }
 
     @Test
-    void testUpdatePassword() {
-        storage.updatePassword("user", "newPass");
-        verify(traineeDAO).updatePassword("user", "newPass");
-    }
-
-    @Test
     void testActivateUser() {
         storage.activateUser("user");
         verify(traineeDAO).activateUser("user");

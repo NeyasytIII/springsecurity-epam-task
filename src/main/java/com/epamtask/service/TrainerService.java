@@ -11,11 +11,9 @@ public interface TrainerService {
     Optional<Trainer> getTrainerById(Long id);
     Optional<Trainer> getTrainerByUsername(String username);
     List<Trainer> getAllTrainers();
-    void updatePassword(String username, String newPassword);
     void activateUser(String username);
     void deactivateUser(String username);
-    boolean verifyLogin(String username, String password);
     List<Trainer> getNotAssignedToTrainee(String traineeUsername);
     List<Trainer> getTrainersNotAssignedToTrainee(String traineeUsername);
-    void setInitialPassword(String username, String newPassword);
+    void deleteTrainer(Long id);
 }

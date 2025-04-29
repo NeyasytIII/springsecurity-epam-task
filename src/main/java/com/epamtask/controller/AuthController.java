@@ -1,10 +1,10 @@
 package com.epamtask.controller;
 
 import com.epamtask.aspect.annotation.MeasureApi;
-import com.epamtask.dto.authenticationdto.AuthResponseDto;
 import com.epamtask.dto.authenticationdto.AuthTokenResponseDto;
 import com.epamtask.dto.authenticationdto.LoginRequestDto;
 import com.epamtask.dto.authenticationdto.PasswordChangeRequestDto;
+import com.epamtask.dto.authenticationdto.RegisterResponseDto;
 import com.epamtask.dto.traineedto.TraineeRegistrationRequestDto;
 import com.epamtask.dto.trainerdto.TrainerRegistrationRequestDto;
 import com.epamtask.facade.AuthenticationFacade;
@@ -51,21 +51,21 @@ public class AuthController {
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(
-                            schema   = @Schema(implementation = TraineeRegistrationRequestDto.class),
+                            schema = @Schema(implementation = TraineeRegistrationRequestDto.class),
                             examples = @ExampleObject(value = TRAINEE_REGISTRATION_EXAMPLE)
                     )
             ),
             responses = {
                     @ApiResponse(responseCode = "200", description = "Trainee registered",
-                            content = @Content(schema = @Schema(implementation = AuthResponseDto.class))),
+                            content = @Content(schema = @Schema(implementation = RegisterResponseDto.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
             }
     )
-    public ResponseEntity<AuthResponseDto> registerTrainee(
+    public ResponseEntity<RegisterResponseDto> registerTrainee(
             @Valid @RequestBody TraineeRegistrationRequestDto dto) {
-        AuthResponseDto resp = authenticationFacade.registerTrainee(dto);
+        RegisterResponseDto response = authenticationFacade.registerTrainee(dto);
         authMetrics.success();
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(response);
     }
 
     @MeasureApi(endpoint = "/api/auth/trainers/register", method = "POST")
@@ -75,21 +75,21 @@ public class AuthController {
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(
-                            schema   = @Schema(implementation = TrainerRegistrationRequestDto.class),
+                            schema = @Schema(implementation = TrainerRegistrationRequestDto.class),
                             examples = @ExampleObject(value = TRAINER_REGISTRATION_EXAMPLE)
                     )
             ),
             responses = {
                     @ApiResponse(responseCode = "200", description = "Trainer registered",
-                            content = @Content(schema = @Schema(implementation = AuthResponseDto.class))),
+                            content = @Content(schema = @Schema(implementation = RegisterResponseDto.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
             }
     )
-    public ResponseEntity<AuthResponseDto> registerTrainer(
+    public ResponseEntity<RegisterResponseDto> registerTrainer(
             @Valid @RequestBody TrainerRegistrationRequestDto dto) {
-        AuthResponseDto resp = authenticationFacade.registerTrainer(dto);
+        RegisterResponseDto response = authenticationFacade.registerTrainer(dto);
         authMetrics.success();
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(response);
     }
 
     @MeasureApi(endpoint = "/api/auth/login", method = "POST")
@@ -99,7 +99,7 @@ public class AuthController {
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(
-                            schema   = @Schema(implementation = LoginRequestDto.class),
+                            schema = @Schema(implementation = LoginRequestDto.class),
                             examples = @ExampleObject(value = LOGIN_EXAMPLE)
                     )
             ),
@@ -113,7 +113,8 @@ public class AuthController {
             @Valid @RequestBody LoginRequestDto dto) {
         AuthTokenResponseDto token;
         try {
-            token = apiMetrics.trackCallable("/api/auth/login", "POST", 200, 0, () -> authMetrics.timed(() -> authenticationFacade.login(dto)));
+            token = apiMetrics.trackCallable("/api/auth/login", "POST", 200, 0,
+                    () -> authMetrics.timed(() -> authenticationFacade.login(dto)));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -134,7 +135,7 @@ public class AuthController {
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(
-                            schema   = @Schema(implementation = PasswordChangeRequestDto.class),
+                            schema = @Schema(implementation = PasswordChangeRequestDto.class),
                             examples = @ExampleObject(value = PASSWORD_CHANGE_EXAMPLE)
                     )
             ),
@@ -145,7 +146,22 @@ public class AuthController {
     )
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody PasswordChangeRequestDto dto) {
-        authenticationFacade.changePassword(dto);
+        authenticationFacade.changePassword(dto.getUsername(), dto.getOldPassword(), dto.getNewPassword());
+        authMetrics.success();
+        return ResponseEntity.ok().build();
+    }
+
+    @MeasureApi(endpoint = "/api/auth/logout", method = "POST")
+    @PostMapping("/logout")
+    @Operation(
+            summary = "Logout user",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Logout successful"),
+                    @ApiResponse(responseCode = "401", description = "Invalid or expired token", content = @Content)
+            }
+    )
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorizationHeader) {
+        authenticationFacade.logout(authorizationHeader);
         authMetrics.success();
         return ResponseEntity.ok().build();
     }

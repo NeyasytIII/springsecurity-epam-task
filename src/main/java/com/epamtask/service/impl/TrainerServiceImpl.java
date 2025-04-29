@@ -1,17 +1,15 @@
 package com.epamtask.service.impl;
 
-import com.epamtask.aspect.annotation.Authenticated;
 import com.epamtask.aspect.annotation.Loggable;
 import com.epamtask.config.ApplicationContextProvider;
 import com.epamtask.exception.NotFoundException;
 import com.epamtask.model.Trainer;
-import com.epamtask.model.TrainingTypeEntity;
 import com.epamtask.model.TrainingType;
+import com.epamtask.model.TrainingTypeEntity;
 import com.epamtask.service.TrainerService;
 import com.epamtask.service.TrainingTypeService;
 import com.epamtask.storege.datamodes.TraineeStorage;
 import com.epamtask.storege.datamodes.TrainerStorage;
-import com.epamtask.utils.PasswordGenerator;
 import com.epamtask.utils.UserNameGenerator;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,8 +52,6 @@ public class TrainerServiceImpl implements TrainerService {
             throw new NotFoundException("Username already taken by a trainee: " + uniqueUsername);
         }
 
-        String password = PasswordGenerator.generatePassword();
-
         TrainingType type = TrainingType.valueOf(specialization);
         TrainingTypeEntity specializationType = trainingTypeService
                 .getTrainingTypeByName(type.name())
@@ -63,20 +59,12 @@ public class TrainerServiceImpl implements TrainerService {
 
         Trainer trainer = new Trainer(null, firstName, lastName, specialization, true);
         trainer.setUserName(uniqueUsername);
-        trainer.setPassword(password);
         trainer.setSpecializationType(specializationType);
 
         trainerStorage.save(trainer);
-
-        trainerStorage.findByUsername(uniqueUsername)
-                .ifPresentOrElse(
-                        t -> System.out.println(" Trainer saved and confirmed from DB: " + t),
-                        () -> System.out.println(" Trainer NOT found in DB after save: " + uniqueUsername)
-                );
     }
 
     @Loggable
-    @Authenticated
     @Override
     public void updateTrainer(Trainer dto) {
         if (dto == null || dto.getUserName() == null || dto.getUserName().isBlank()) {
@@ -84,9 +72,7 @@ public class TrainerServiceImpl implements TrainerService {
         }
         Trainer existing = trainerStorage.findByUsername(dto.getUserName())
                 .orElseThrow(() -> new NotFoundException("Trainer not found: " + dto.getUserName()));
-        if (!dto.getUserName().equals(existing.getUserName())) {
-            existing.setUserName(dto.getUserName());
-        }
+
         if (dto.getFirstName() != null) {
             existing.setFirstName(dto.getFirstName());
         }
@@ -102,18 +88,17 @@ public class TrainerServiceImpl implements TrainerService {
                     .orElseThrow(() -> new NotFoundException("Unknown specialization: " + dto.getSpecialization()));
             existing.setSpecializationType(tte);
         }
+
         trainerStorage.save(existing);
     }
 
     @Loggable
-    @Authenticated
     @Override
     public Optional<Trainer> getTrainerById(Long id) {
         return trainerStorage.findById(id);
     }
 
     @Loggable
-    @Authenticated
     @Override
     public Optional<Trainer> getTrainerByUsername(String username) {
         if (username == null || username.isBlank()) {
@@ -123,14 +108,13 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Loggable
-    @Authenticated
     @Override
     public List<Trainer> getAllTrainers() {
         return trainerStorage.findAll();
     }
 
     @Loggable
-    @Authenticated
+    @Override
     public void deleteTrainer(Long id) {
         if (id == null) {
             throw new NotFoundException("ID cannot be null");
@@ -140,54 +124,24 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Loggable
     @Override
-    public void updatePassword(String username, String newPassword) {
-        if (username == null || username.isBlank()) {
-            throw new NotFoundException("Username cannot be null or empty");
-        }
-        if (newPassword == null || newPassword.isBlank()) {
-            throw new NotFoundException("New password cannot be null or empty");
-        }
-        Trainer trainer = trainerStorage.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("Trainer not found: " + username));
-        trainer.setPassword(newPassword);
-        trainerStorage.save(trainer);
-    }
-
-    @Loggable
-    @Authenticated
-    @Override
     public void activateUser(String username) {
         if (username == null || username.isBlank()) {
             throw new NotFoundException("Username cannot be null or empty");
         }
-        Trainer trainer = trainerStorage.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("Trainer not found: " + username));
-        trainer.setActive(true);
-        trainerStorage.save(trainer);
+        trainerStorage.activateUser(username);
     }
 
     @Loggable
-    @Authenticated
     @Override
     public void deactivateUser(String username) {
         if (username == null || username.isBlank()) {
             throw new NotFoundException("Username cannot be null or empty");
         }
-        Trainer trainer = trainerStorage.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("Trainer not found: " + username));
-        trainer.setActive(false);
-        trainerStorage.save(trainer);
+        trainerStorage.deactivateUser(username);
     }
 
-    @Override
     @Loggable
-    public boolean verifyLogin(String username, String password) {
-        return trainerStorage.verifyLogin(username, password);
-    }
-
     @Override
-    @Loggable
-    @Authenticated
     public List<Trainer> getNotAssignedToTrainee(String traineeUsername) {
         if (traineeUsername == null || traineeUsername.isBlank()) {
             throw new NotFoundException("Trainee username is required");
@@ -195,16 +149,9 @@ public class TrainerServiceImpl implements TrainerService {
         return trainerStorage.findNotAssignedToTrainee(traineeUsername);
     }
 
-    @Override
     @Loggable
-    @Authenticated
+    @Override
     public List<Trainer> getTrainersNotAssignedToTrainee(String traineeUsername) {
         return trainerStorage.findNotAssignedToTrainee(traineeUsername);
-    }
-
-    @Override
-    @Loggable
-    public void setInitialPassword(String username, String password) {
-        trainerStorage.updatePassword(username, password);
     }
 }

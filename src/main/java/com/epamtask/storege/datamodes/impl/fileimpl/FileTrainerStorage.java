@@ -41,29 +41,30 @@ public class FileTrainerStorage implements TrainerStorage {
         return trainerDAO.getAll().values().stream().toList();
     }
     @Loggable
-    @Override
-    public void update(Trainer trainer) {
-        trainerDAO.create(trainer.getTrainerId(), trainer);
-    }
 
-    @Override
-    public boolean verifyLogin(String username, String password) {
-        return false;
-    }
+
 
     @Override
     public List<Trainer> findNotAssignedToTrainee(String traineeUsername) {
         return List.of();
     }
 
-    @Override
-    public void updatePassword(String username, String newPassword) {
 
-    }
 
     @Loggable
     @Override
     public void deleteById(Long id) {
         trainerDAO.deleteById(id);
     }
+
+    @Override
+    public void activateUser(String username) {
+        
+    }
+
+    @Override
+    public void deactivateUser(String username) {
+
+    }
+
 }

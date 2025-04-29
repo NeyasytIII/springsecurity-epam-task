@@ -58,12 +58,7 @@ class DatabaseTrainerStorageTest {
         verify(trainerRepository).save(trainer);
     }
 
-    @Test
-    void testUpdate() {
-        Trainer trainer = new Trainer();
-        storage.update(trainer);
-        verify(trainerRepository).save(trainer);
-    }
+
 
     @Test
     void testDeleteById() {

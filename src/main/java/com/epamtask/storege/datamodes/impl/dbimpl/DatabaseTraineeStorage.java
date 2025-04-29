@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+
 @Primary
 @Component("databaseTraineeStorage")
 public class DatabaseTraineeStorage implements TraineeStorage {
@@ -22,7 +23,6 @@ public class DatabaseTraineeStorage implements TraineeStorage {
         this.traineeRepository = traineeRepository;
         LOG.info("DatabaseTraineeStorage initialized!");
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -41,6 +41,7 @@ public class DatabaseTraineeStorage implements TraineeStorage {
     public List<Trainee> findAll() {
         return traineeRepository.findAll();
     }
+
     @Override
     @Transactional
     public void save(Trainee trainee) {
@@ -61,12 +62,6 @@ public class DatabaseTraineeStorage implements TraineeStorage {
 
     @Override
     @Transactional
-    public void updatePassword(String username, String newPassword) {
-        traineeRepository.updatePassword(username, newPassword);
-    }
-
-    @Override
-    @Transactional
     public void activateUser(String username) {
         traineeRepository.activateUser(username);
     }
@@ -78,8 +73,8 @@ public class DatabaseTraineeStorage implements TraineeStorage {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean verifyLogin(String username, String password) {
-        return traineeRepository.existsByUsernameAndPassword(username, password);
+    @Transactional
+    public void updateTraineeTrainersList(String traineeUsername, List<String> trainerUsernames) {
+        traineeRepository.updateTraineeTrainersList(traineeUsername, trainerUsernames);
     }
 }

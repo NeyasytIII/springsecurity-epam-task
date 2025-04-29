@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+
 @Primary
 @Component("databaseTrainerStorage")
-
 public class DatabaseTrainerStorage implements TrainerStorage {
 
     private final TrainerRepository trainerRepository;
@@ -44,44 +44,28 @@ public class DatabaseTrainerStorage implements TrainerStorage {
     public void save(Trainer trainer) {
         trainerRepository.save(trainer);
     }
-    @Loggable
-    public void verifySave(String username) {
-        Optional<Trainer> saved = findByUsername(username);
-        if (saved.isPresent()) {
-            System.out.println(" Trainer saved and confirmed from DB: " + saved.get());
-        } else {
-            System.out.println(" Trainer NOT found in DB after save: " + username);
-        }
-    }
-    @Override
-    @Transactional
-    public void update(Trainer trainer) {
-        trainerRepository.save(trainer);
-    }
+
     @Override
     @Transactional
     public void deleteById(Long id) {
         trainerRepository.deleteById(id);
     }
-    @Override
-    @Transactional(readOnly = true)
-    public boolean verifyLogin(String username, String password) {
-        return trainerRepository.existsByUsernameAndPassword(username, password);
-    }
+
     @Override
     @Transactional(readOnly = true)
     public List<Trainer> findNotAssignedToTrainee(String traineeUsername) {
         return trainerRepository.findNotAssignedToTrainee(traineeUsername);
     }
-    @Transactional
+
     @Override
-    public void updatePassword(String username, String newPassword) {
-        Optional<Trainer> trainer = findByUsername(username);
-        if (trainer.isPresent()) {
-            trainer.get().setPassword(newPassword);
-            save(trainer.get());
-        } else {
-            throw new IllegalArgumentException("Trainer not found");
-        }
+    @Transactional
+    public void activateUser(String username) {
+        trainerRepository.activateUser(username);
+    }
+
+    @Override
+    @Transactional
+    public void deactivateUser(String username) {
+        trainerRepository.deactivateUser(username);
     }
 }

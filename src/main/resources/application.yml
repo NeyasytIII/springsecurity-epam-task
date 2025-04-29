@@ -29,3 +29,7 @@ server:
 
 data:
   source: DATABASE
+
+jwt:
+  secret: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0VXNlciIsImV4cCI6MTYyMzQyMjgwMCwiaWF0IjoxNjIzNDIyODAwfQ.b7fOdp3n6fZdbjN3rT7esZT2fPeox28aJsEXXhzrRSk"
+  expiration: 3600000

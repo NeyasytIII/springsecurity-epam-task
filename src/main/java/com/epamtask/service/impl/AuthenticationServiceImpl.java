@@ -1,68 +1,57 @@
 package com.epamtask.service.impl;
 
 import com.epamtask.aspect.annotation.Loggable;
+import com.epamtask.model.UserCredentials;
+import com.epamtask.repository.UserCredentialsRepository;
 import com.epamtask.service.AuthenticationService;
-import com.epamtask.storege.datamodes.TraineeStorage;
-import com.epamtask.storege.datamodes.TrainerStorage;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-@Primary
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final TraineeStorage traineeStorage;
-    private final TrainerStorage trainerStorage;
+    private final UserCredentialsRepository userCredentialsRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthenticationServiceImpl(
-            @Value("${data.source}") String dataSource,
-            @Qualifier("databaseTraineeStorage") TraineeStorage dbTrainee,
-            @Qualifier("fileTraineeStorage")     TraineeStorage fileTrainee,
-            @Qualifier("databaseTrainerStorage") TrainerStorage dbTrainer,
-            @Qualifier("fileTrainerStorage")     TrainerStorage fileTrainer
-    ) {
-        this.traineeStorage = "DATABASE".equalsIgnoreCase(dataSource) ? dbTrainee : fileTrainee;
-        this.trainerStorage = "DATABASE".equalsIgnoreCase(dataSource) ? dbTrainer : fileTrainer;
+    public AuthenticationServiceImpl(UserCredentialsRepository userCredentialsRepository,
+                                     PasswordEncoder passwordEncoder) {
+        this.userCredentialsRepository = userCredentialsRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Loggable
     @Override
-    public boolean authenticate(String username, String password) {
-        var t = traineeStorage.findByUsername(username);
-        System.out.println("Trainee found? " + t.isPresent());
-        t.ifPresent(trainee -> System.out.println("Stored password: " + trainee.getPassword() + ", Given: " + password));
-
-        var r = trainerStorage.findByUsername(username);
-        System.out.println("Trainer found? " + r.isPresent());
-        r.ifPresent(trainer -> System.out.println("Stored password: " + trainer.getPassword() + ", Given: " + password));
-
-        boolean traineeValid = t.map(trainee -> trainee.getPassword().equals(password)).orElse(false);
-        boolean trainerValid = r.map(trainer -> trainer.getPassword().equals(password)).orElse(false);
-
-        return traineeValid || trainerValid;
-    }
-
-    public boolean checkCredentialsWithoutAuth(String username, String password) {
-        boolean traineeMatch = traineeStorage.findByUsername(username)
-                .map(trainee -> trainee.getPassword().equals(password))
+    public boolean authenticate(String username, String rawPassword) {
+        return userCredentialsRepository.findByUsername(username)
+                .map(user -> passwordEncoder.matches(rawPassword, user.getHashedPassword()))
                 .orElse(false);
-
-        boolean trainerMatch = trainerStorage.findByUsername(username)
-                .map(trainer -> trainer.getPassword().equals(password))
-                .orElse(false);
-
-        return traineeMatch || trainerMatch;
     }
 
     @Loggable
     @Override
-    public void updatePasswordWithoutAuth(String username, String newPassword) {
-        if (trainerStorage.findByUsername(username).isPresent()) {
-            trainerStorage.updatePassword(username, newPassword);
-        } else if (traineeStorage.findByUsername(username).isPresent()) {
-            traineeStorage.updatePassword(username, newPassword);
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        UserCredentials credentials = userCredentialsRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!passwordEncoder.matches(oldPassword, credentials.getHashedPassword())) {
+            throw new IllegalArgumentException("Invalid old password");
         }
+
+        credentials.setHashedPassword(passwordEncoder.encode(newPassword));
+        userCredentialsRepository.save(credentials);
+    }
+
+    @Loggable
+    @Override
+    public void register(String username, String rawPassword, String role) {
+        if (userCredentialsRepository.findByUsername(username).isPresent()) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        UserCredentials credentials = new UserCredentials();
+        credentials.setUsername(username);
+        credentials.setHashedPassword(passwordEncoder.encode(rawPassword));
+        credentials.setRole(role);
+
+        userCredentialsRepository.save(credentials);
     }
 }

@@ -57,11 +57,7 @@ public class FileTraineeStorage implements TraineeStorage {
     public void deleteByUsername(String username) {
         traineeDAO.deleteByUsername(username);
     }
-    @Loggable
-    @Override
-    public void updatePassword(String username, String newPassword) {
-        traineeDAO.updatePassword(username, newPassword);
-    }
+
 
     @Loggable
     @Override
@@ -74,9 +70,9 @@ public class FileTraineeStorage implements TraineeStorage {
     public void deactivateUser(String username) {
         traineeDAO.deactivateUser(username);
     }
-    @Loggable
+
     @Override
-    public boolean verifyLogin(String username, String password) {
-        return traineeDAO.existsByUsernameAndPassword(username, password);
+    public void updateTraineeTrainersList(String traineeUsername, List<String> trainerUsernames) {
+
     }
 }

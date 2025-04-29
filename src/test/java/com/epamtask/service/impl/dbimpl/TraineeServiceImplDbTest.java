@@ -1,4 +1,6 @@
 package com.epamtask.service.impl.dbimpl;
+import com.epamtask.config.ApplicationContextProvider;
+import com.epamtask.exception.NotFoundException;
 import com.epamtask.model.Trainee;
 import com.epamtask.model.Trainer;
 import com.epamtask.service.impl.TraineeServiceImpl;
@@ -9,20 +11,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class TraineeServiceImplDbTest {
-
     @Mock
     private TraineeStorage traineeStorage;
 
@@ -38,116 +36,119 @@ class TraineeServiceImplDbTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        traineeService = new TraineeServiceImpl(
-                "DATABASE",
-                traineeStorage,
-                mock(TraineeStorage.class),
-                trainerStorage,
-                userNameGenerator
-        );
     }
 
     @Test
-    void createTrainee_Success() {
-        when(traineeStorage.findById(1L)).thenReturn(Optional.empty());
-        when(traineeStorage.findAll()).thenReturn(new ArrayList<>());
-        when(userNameGenerator.generateUserName(any(), any())).thenReturn("john.doe");
+    void createTrainee_shouldSaveTrainee() {
+        when(userNameGenerator.generateUserName("John", "Doe")).thenReturn("john.doe");
+        when(traineeStorage.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        traineeService.createTrainee("John", "Doe", "Address", new Date());
+        TrainerStorage mockTrainerStorage = mock(TrainerStorage.class);
+        when(mockTrainerStorage.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        verify(traineeStorage).save(any(Trainee.class));
+        try (MockedStatic<ApplicationContextProvider> mocked = mockStatic(ApplicationContextProvider.class)) {
+            mocked.when(() -> ApplicationContextProvider.getBean(TrainerStorage.class)).thenReturn(mockTrainerStorage);
+
+            traineeService.createTrainee("John", "Doe", "Street 123", new Date());
+
+            verify(traineeStorage).save(any(Trainee.class));
+        }
     }
 
     @Test
-    void updateTrainee_Success() {
-        Trainee trainee = new Trainee();
-        trainee.setTraineeId(1L);
-        trainee.setUserName("John.Doe");
+    void createTrainee_shouldThrowException_whenUsernameTakenByTrainer() {
+        when(userNameGenerator.generateUserName("John", "Doe")).thenReturn("john.doe");
+        when(traineeStorage.findByUsername("john.doe")).thenReturn(Optional.empty());
+        when(trainerStorage.findByUsername("john.doe")).thenReturn(Optional.of(mock(Trainer.class)));
 
-        when(traineeStorage.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+        try (MockedStatic<ApplicationContextProvider> mocked = mockStatic(ApplicationContextProvider.class)) {
+            mocked.when(() -> ApplicationContextProvider.getBean(TrainerStorage.class)).thenReturn(trainerStorage);
 
-        traineeService.updateTrainee(trainee);
-
-        verify(traineeStorage).save(trainee);
+            assertThrows(IllegalArgumentException.class, () ->
+                    traineeService.createTrainee("John", "Doe", "Street 123", new Date()));
+        }
     }
 
     @Test
-    void deleteTrainee_Success() {
+    void updateTrainee_shouldUpdateFields() {
+        Trainee existing = new Trainee();
+        existing.setUserName("john.doe");
+
+        Trainee updateDto = new Trainee();
+        updateDto.setUserName("john.doe");
+        updateDto.setFirstName("Johnny");
+        updateDto.setLastName("Updated");
+
+        when(traineeStorage.findByUsername("john.doe")).thenReturn(Optional.of(existing));
+
+        traineeService.updateTrainee(updateDto);
+
+        verify(traineeStorage).save(existing);
+    }
+
+    @Test
+    void deleteTrainee_shouldCallStorage() {
         traineeService.deleteTrainee(1L);
         verify(traineeStorage).deleteById(1L);
     }
 
     @Test
-    void deleteTraineeByUsername_Success() {
-        when(traineeStorage.findByUsername("John")).thenReturn(Optional.of(new Trainee()));
-        traineeService.deleteTraineeByUsername("John");
-        verify(traineeStorage).deleteByUsername("John");
+    void deleteTraineeByUsername_shouldDelete() {
+        when(traineeStorage.findByUsername("john.doe")).thenReturn(Optional.of(new Trainee()));
+
+        traineeService.deleteTraineeByUsername("john.doe");
+
+        verify(traineeStorage).deleteByUsername("john.doe");
     }
 
     @Test
-    void getTraineeById_Success() {
+    void deleteTraineeByUsername_shouldThrow_ifNotFound() {
+        when(traineeStorage.findByUsername("john.doe")).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () ->
+                traineeService.deleteTraineeByUsername("john.doe"));
+    }
+
+    @Test
+    void getTraineeById_shouldReturnResult() {
         when(traineeStorage.findById(1L)).thenReturn(Optional.of(new Trainee()));
-        Optional<Trainee> result = traineeService.getTraineeById(1L);
-        assertTrue(result.isPresent());
+        assertTrue(traineeService.getTraineeById(1L).isPresent());
     }
 
     @Test
-    void getTraineeByUsername_Success() {
-        when(traineeStorage.findByUsername("john")).thenReturn(Optional.of(new Trainee()));
-        Optional<Trainee> result = traineeService.getTraineeByUsername("john");
-        assertTrue(result.isPresent());
+    void getTraineeByUsername_shouldReturnResult() {
+        when(traineeStorage.findByUsername("john.doe")).thenReturn(Optional.of(new Trainee()));
+        assertTrue(traineeService.getTraineeByUsername("john.doe").isPresent());
     }
 
     @Test
-    void getAllTrainees_Success() {
+    void getAllTrainees_shouldReturnList() {
         when(traineeStorage.findAll()).thenReturn(List.of(new Trainee()));
-        List<Trainee> result = traineeService.getAllTrainees();
-        assertEquals(1, result.size());
+        List<Trainee> list = traineeService.getAllTrainees();
+        assertEquals(1, list.size());
     }
 
     @Test
-    void assignTrainersToTrainee_Success() {
-        Trainee trainee = new Trainee();
-        trainee.setTrainers(new HashSet<>());
-        Trainer trainer = new Trainer();
-        when(traineeStorage.findByUsername("john")).thenReturn(Optional.of(trainee));
-        when(trainerStorage.findByUsername("trainer1")).thenReturn(Optional.of(trainer));
-
-        traineeService.assignTrainersToTrainee("john", List.of("trainer1"));
-
-        verify(traineeStorage).save(trainee);
+    void getAllTrainees_shouldThrow_ifEmpty() {
+        when(traineeStorage.findAll()).thenReturn(List.of());
+        assertThrows(NotFoundException.class, () -> traineeService.getAllTrainees());
     }
 
     @Test
-    void updatePassword_Success() {
-        Trainee trainee = new Trainee();
-        when(traineeStorage.findByUsername("john")).thenReturn(Optional.of(trainee));
-
-        traineeService.updatePassword("john", "newpass");
-
-        verify(traineeStorage).save(trainee);
-        assertEquals("newpass", trainee.getPassword());
+    void activateUser_shouldCallStorage() {
+        traineeService.activateUser("john.doe");
+        verify(traineeStorage).activateUser("john.doe");
     }
 
     @Test
-    void activateUser_Success() {
-        Trainee trainee = new Trainee();
-        when(traineeStorage.findByUsername("john")).thenReturn(Optional.of(trainee));
-
-        traineeService.activateUser("john");
-
-        verify(traineeStorage).save(trainee);
-        assertTrue(trainee.isActive());
+    void deactivateUser_shouldCallStorage() {
+        traineeService.deactivateUser("john.doe");
+        verify(traineeStorage).deactivateUser("john.doe");
     }
 
     @Test
-    void deactivateUser_Success() {
-        Trainee trainee = new Trainee();
-        when(traineeStorage.findByUsername("john")).thenReturn(Optional.of(trainee));
-
-        traineeService.deactivateUser("john");
-
-        verify(traineeStorage).save(trainee);
-        assertFalse(trainee.isActive());
+    void assignTrainersToTrainee_shouldUpdateTrainerList() {
+        traineeService.assignTrainersToTrainee("john.doe", List.of("trainer1", "trainer2"));
+        verify(traineeStorage).updateTraineeTrainersList("john.doe", List.of("trainer1", "trainer2"));
     }
 }

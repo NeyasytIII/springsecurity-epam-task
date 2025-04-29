@@ -62,14 +62,6 @@ class FileTrainerStorageTest {
     }
 
     @Test
-    void testUpdate() {
-        Trainer trainer = new Trainer();
-        trainer.setTrainerId(2L);
-        storage.update(trainer);
-        verify(trainerDAO).create(2L, trainer);
-    }
-
-    @Test
     void testDeleteById() {
         storage.deleteById(3L);
         verify(trainerDAO).deleteById(3L);

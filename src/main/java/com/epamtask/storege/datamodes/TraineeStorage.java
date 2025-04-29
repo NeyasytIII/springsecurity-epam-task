@@ -11,12 +11,8 @@ public interface TraineeStorage {
     Optional<Trainee> findByUsername(String username);
     List<Trainee> findAll();
     void deleteById(Long id);
-
     void deleteByUsername(String username);
-    void updatePassword(String username, String newPassword);
     void activateUser(String username);
     void deactivateUser(String username);
-    boolean verifyLogin(String username, String password);
-
-
+    void updateTraineeTrainersList(String traineeUsername, List<String> trainerUsernames);
 }

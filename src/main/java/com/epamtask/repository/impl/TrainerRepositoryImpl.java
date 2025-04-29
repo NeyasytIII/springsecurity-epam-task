@@ -87,31 +87,6 @@ public class TrainerRepositoryImpl implements TrainerRepository {
     }
 
     @Loggable
-    @MeasureDb(table = "trainer", operation = "select")
-    @Override
-    public boolean existsByUsernameAndPassword(String username, String password) {
-        Long count = entityManager.createQuery(
-                        "SELECT COUNT(t) FROM Trainer t WHERE t.userName = :username AND t.password = :password",
-                        Long.class)
-                .setParameter("username", username)
-                .setParameter("password", password)
-                .getSingleResult();
-        return count > 0;
-    }
-
-    @Loggable
-    @MeasureDb(table = "trainer", operation = "update")
-    @Override
-    public void updatePassword(String username, String newPassword) {
-        entityManager.createQuery(
-                        "UPDATE Trainer t SET t.password = :newPassword WHERE t.userName = :username")
-                .setParameter("newPassword", newPassword)
-                .setParameter("username", username)
-                .executeUpdate();
-        entityManager.flush();
-    }
-
-    @Loggable
     @MeasureDb(table = "trainer", operation = "update")
     @Override
     public void activateUser(String username) {
@@ -140,6 +115,7 @@ public class TrainerRepositoryImpl implements TrainerRepository {
 
     @Loggable
     @MeasureDb(table = "trainer", operation = "select")
+    @Override
     public List<Trainer> findNotAssignedToTrainee(String traineeUsername) {
         String q = "SELECT t FROM Trainer t WHERE t.trainerId NOT IN (" +
                 "SELECT trInner.trainerId FROM Trainee tJoin JOIN tJoin.trainers trInner " +
@@ -148,4 +124,27 @@ public class TrainerRepositoryImpl implements TrainerRepository {
                 .setParameter("username", traineeUsername)
                 .getResultList();
     }
+    @Loggable
+    @MeasureDb(table = "trainer", operation = "select")
+    @Override
+    public boolean existsByUsernameAndPassword(String username, String password) {
+        Long count = entityManager.createQuery(
+                        "SELECT COUNT(t) FROM Trainer t WHERE t.userName = :username AND t.hashedPassword = :password",
+                        Long.class)
+                .setParameter("username", username)
+                .setParameter("password", password)
+                .getSingleResult();
+        return count > 0;
+    }
+
+    @Loggable
+    @MeasureDb(table = "trainer", operation = "update")
+    @Override
+    public void updatePassword(String username, String newPassword) {
+        entityManager.createQuery("UPDATE Trainer t SET t.hashedPassword = :password WHERE t.userName = :username")
+                .setParameter("password", newPassword)
+                .setParameter("username", username)
+                .executeUpdate();
+    }
+
 }

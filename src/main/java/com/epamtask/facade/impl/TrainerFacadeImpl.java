@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class TrainerFacadeImpl implements TrainerFacade {
+
     private final TrainerService trainerService;
     private final TrainingService trainingService;
     private final TraineeService traineeService;
@@ -76,12 +77,6 @@ public class TrainerFacadeImpl implements TrainerFacade {
 
     @Loggable
     @Override
-    public void updatePassword(String username, String newPassword) {
-        trainerService.updatePassword(username, newPassword);
-    }
-
-    @Loggable
-    @Override
     public void activateUser(String username) {
         trainerService.activateUser(username);
     }
@@ -90,12 +85,6 @@ public class TrainerFacadeImpl implements TrainerFacade {
     @Override
     public void deactivateUser(String username) {
         trainerService.deactivateUser(username);
-    }
-
-    @Loggable
-    @Override
-    public boolean verifyLogin(String username, String password) {
-        return trainerService.verifyLogin(username, password);
     }
 
     @Loggable
@@ -112,11 +101,6 @@ public class TrainerFacadeImpl implements TrainerFacade {
 
     @Loggable
     @Override
-    public void setInitialPassword(String username, String newPassword) {
-        trainerService.setInitialPassword(username, newPassword);
-    }
-    @Loggable
-    @Override
     public TrainerProfileResponseDto getTrainerProfile(String username) {
         Trainer trainer = getTrainerByUsername(username)
                 .orElseThrow(() -> new NotFoundException("Trainer not found: " + username));
@@ -130,13 +114,16 @@ public class TrainerFacadeImpl implements TrainerFacade {
         dto.setTrainees(traineeMapper.toShortDtoList(trainees));
         return dto;
     }
+
     @Loggable
     @Override
     public List<TrainerShortDto> getFreeTrainersNotAssignedByTrainings(String traineeUsername) {
         Trainee trainee = traineeService.getTraineeByUsername(traineeUsername)
                 .orElseThrow(() -> new NotFoundException("Trainee not found: " + traineeUsername));
 
-        List<Training> trainings = trainingService.getTrainingsByTraineeUsernameAndCriteria(traineeUsername, null, null, null, null);
+        List<Training> trainings = trainingService.getTrainingsByTraineeUsernameAndCriteria(
+                traineeUsername, null, null, null, null);
+
         Set<Trainer> assignedTrainers = trainings.stream()
                 .map(Training::getTrainer)
                 .collect(Collectors.toSet());

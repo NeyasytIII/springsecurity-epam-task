@@ -1,112 +1,120 @@
 package com.epamtask.controller;
 
-import com.epamtask.config.TestMetricsConfig;
-import com.epamtask.dto.authenticationdto.*;
+import com.epamtask.dto.authenticationdto.LoginRequestDto;
+import com.epamtask.dto.authenticationdto.PasswordChangeRequestDto;
 import com.epamtask.dto.traineedto.TraineeRegistrationRequestDto;
+import com.epamtask.dto.trainerdto.TrainerRegistrationRequestDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import com.epamtask.config.TestMetricsConfig;
-import org.springframework.context.annotation.Import;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestMetricsConfig.class)
 class AuthControllerIntegrationTest {
 
     @Autowired
-    private MockMvc mvc;
+    private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper mapper;
+    private ObjectMapper objectMapper;
 
-    private static String traineeUsername;
-    private static String traineePassword;
-    private static boolean traineeInited;
+    private String username;
+    private String password;
+    private String token;
 
-    @BeforeAll
-    static void disableContextCache() {
-        System.setProperty("spring.test.context.cache.maxSize", "0");
+    @BeforeEach
+    void setUp() throws Exception {
+        TraineeRegistrationRequestDto regDto = new TraineeRegistrationRequestDto();
+        long rnd = ThreadLocalRandom.current().nextLong(1000000);
+        regDto.setFirstName("John" + rnd);
+        regDto.setLastName("Doe" + rnd);
+        regDto.setAddress("Test Address");
+        regDto.setBirthdayDate(new SimpleDateFormat("yyyy-MM-dd").parse("2000-01-01"));
+
+        String response = mockMvc.perform(post("/api/auth/trainees/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(regDto)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        JsonNode jsonNode = objectMapper.readTree(response);
+        username = jsonNode.get("username").asText();
+        password = jsonNode.get("password").asText();
+        token = jsonNode.get("token").asText();
     }
 
     @Test
-    void trainee_registerLoginChangePassword_flowOk() throws Exception {
-        ensureTrainee();
+    void login_shouldReturnToken() throws Exception {
+        LoginRequestDto loginDto = new LoginRequestDto();
+        loginDto.setUsername(username);
+        loginDto.setPassword(password);
 
-        LoginRequestDto login = new LoginRequestDto();
-        login.setUsername(traineeUsername);
-        login.setPassword(traineePassword);
-
-        mvc.perform(post("/api/auth/login")
+        String loginResponse = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(login)))
+                        .content(objectMapper.writeValueAsString(loginDto)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        JsonNode jsonNode = objectMapper.readTree(loginResponse);
+        assertNotNull(jsonNode.get("token").asText());
+    }
+
+    @Test
+    void changePassword_shouldSucceed() throws Exception {
+        PasswordChangeRequestDto changeDto = new PasswordChangeRequestDto();
+        changeDto.setUsername(username);
+        changeDto.setOldPassword(password);
+        changeDto.setNewPassword("NewPass!123");
+
+        mockMvc.perform(put("/api/auth/change-password")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(changeDto)))
                 .andExpect(status().isOk());
-        PasswordChangeRequestDto change = new PasswordChangeRequestDto();
-        change.setUsername(traineeUsername);
-        change.setOldPassword(traineePassword);
-        change.setNewPassword("NewPass!123");
 
-        mvc.perform(put("/api/auth/change-password")
+        LoginRequestDto loginDto = new LoginRequestDto();
+        loginDto.setUsername(username);
+        loginDto.setPassword("NewPass!123");
+
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(change)))
-                .andExpect(status().isOk());
-        login.setPassword("NewPass!123");
-        mvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(login)))
+                        .content(objectMapper.writeValueAsString(loginDto)))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void trainee_changePasswordWithWrongOldPassword_returns401() throws Exception {
-        ensureTrainee();
-
-        PasswordChangeRequestDto dto = new PasswordChangeRequestDto();
-        dto.setUsername(traineeUsername);
-        dto.setOldPassword("invalid-old");
-        dto.setNewPassword("whatever");
-
-        mvc.perform(put("/api/auth/change-password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isUnauthorized());
+    void logout_shouldSucceed() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
     }
 
-    private void ensureTrainee() throws Exception {
-        if (traineeInited) return;
+    @Test
+    void registerTrainer_shouldReturn200() throws Exception {
+        TrainerRegistrationRequestDto trainerDto = new TrainerRegistrationRequestDto();
+        long rnd = ThreadLocalRandom.current().nextLong(1000000);
+        trainerDto.setFirstName("Trainer" + rnd);
+        trainerDto.setLastName("Test" + rnd);
+        trainerDto.setSpecialization("STRENGTH");
 
-        long rnd = ThreadLocalRandom.current().nextLong(1_000_000);
-        TraineeRegistrationRequestDto reg = new TraineeRegistrationRequestDto();
-        reg.setFirstName("John" + rnd);
-        reg.setLastName("Doe" + rnd);
-        reg.setAddress("улица Пушкина");
-        reg.setBirthdayDate(new SimpleDateFormat("yyyy-MM-dd").parse("2000-01-01"));
-
-        String resp = mvc.perform(post("/api/auth/trainees/register")
+        mockMvc.perform(post("/api/auth/trainers/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(reg)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        JsonNode j = mapper.readTree(resp);
-        traineeUsername = j.get("username").asText();
-        traineePassword = j.get("password").asText();
-        traineeInited = true;
+                        .content(objectMapper.writeValueAsString(trainerDto)))
+                .andExpect(status().isOk());
     }
 }
